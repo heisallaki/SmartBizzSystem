@@ -1,16 +1,80 @@
-# React + Vite
+# SmartBizzSystem
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern inventory and sales management system designed for small and medium-sized businesses.
 
-Currently, two official plugins are available:
+## Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+SmartBizzSystem is a web-based business management application focused on helping businesses efficiently manage inventory, sales, suppliers, and business reports through an intuitive dashboard.
 
-## React Compiler
+The project is being developed incrementally following professional software development practices, with version control, project planning, and documented milestones.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## Planned Features
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- Authentication & User Roles
+- Inventory Management
+- Supplier Management
+- Sales Processing
+- Dashboard & Analytics
+- Reports & Export
+- Responsive User Interface
+
+---
+
+## Tech Stack
+
+Frontend
+- React
+- Vite
+- JavaScript
+- CSS
+
+Backend
+- *(To be decided during development)*
+
+Database
+- *(To be decided during development)*
+
+---
+
+## Project Status
+
+🚧 In Development
+
+Current Version:
+v0.1.0
+
+---
+
+## Development Workflow
+
+Development follows a milestone-based workflow using GitHub Projects.
+
+Each feature progresses through:
+
+To Do → In Progress → Done
+
+Every completed milestone is committed with descriptive Git messages to maintain a clean and professional development history.
+
+---
+
+## Roadmap
+
+- Project Setup
+- Database Design
+- Authentication
+- Dashboard UI
+- Inventory Module
+- Sales Module
+- Supplier Management
+- Reports & Analytics
+- Testing
+- Deployment
+- Documentation
+
+---
+
+## License
+
+This project is developed for educational and portfolio purposes.
