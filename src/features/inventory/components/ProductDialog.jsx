@@ -28,25 +28,83 @@ export default function ProductDialog({
 
   const [form, setForm] = useState(emptyProduct);
 
+  const [errors, setErrors] = useState({});
+
   useEffect(() => {
     if (selectedProduct) {
       setForm(selectedProduct);
     } else {
       setForm(emptyProduct);
     }
-  }, [selectedProduct]);
+
+    setErrors({});
+  }, [selectedProduct, open]);
 
   const handleChange = (event) => {
+    const { name, value } = event.target;
+
     setForm((previousForm) => ({
       ...previousForm,
-      [event.target.name]: event.target.value,
+      [name]: value,
+    }));
+
+    setErrors((previousErrors) => ({
+      ...previousErrors,
+      [name]: "",
     }));
   };
 
+  const validateForm = () => {
+    const validationErrors = {};
+
+    if (!form.sku.trim()) {
+      validationErrors.sku = "SKU is required.";
+    }
+
+    if (!form.name.trim()) {
+      validationErrors.name =
+        "Product name is required.";
+    }
+
+    if (!form.category.trim()) {
+      validationErrors.category =
+        "Category is required.";
+    }
+
+    if (form.stock === "") {
+      validationErrors.stock =
+        "Stock quantity is required.";
+    } else if (Number(form.stock) < 0) {
+      validationErrors.stock =
+        "Stock cannot be negative.";
+    }
+
+    if (form.price === "") {
+      validationErrors.price =
+        "Price is required.";
+    } else if (Number(form.price) <= 0) {
+      validationErrors.price =
+        "Price must be greater than zero.";
+    }
+
+    setErrors(validationErrors);
+
+    return Object.keys(validationErrors).length === 0;
+  };
+
   const handleSave = () => {
-    onSave(form);
+    if (!validateForm()) {
+      return;
+    }
+
+    onSave({
+      ...form,
+      stock: Number(form.stock),
+      price: Number(form.price),
+    });
 
     setForm(emptyProduct);
+    setErrors({});
 
     onClose();
   };
@@ -59,7 +117,9 @@ export default function ProductDialog({
       maxWidth="sm"
     >
       <DialogTitle>
-        {mode === "edit" ? "Edit Product" : "Add Product"}
+        {mode === "edit"
+          ? "Edit Product"
+          : "Add Product"}
       </DialogTitle>
 
       <DialogContent>
@@ -69,6 +129,8 @@ export default function ProductDialog({
             name="sku"
             value={form.sku}
             onChange={handleChange}
+            error={!!errors.sku}
+            helperText={errors.sku}
             fullWidth
           />
 
@@ -77,6 +139,8 @@ export default function ProductDialog({
             name="name"
             value={form.name}
             onChange={handleChange}
+            error={!!errors.name}
+            helperText={errors.name}
             fullWidth
           />
 
@@ -85,6 +149,8 @@ export default function ProductDialog({
             name="category"
             value={form.category}
             onChange={handleChange}
+            error={!!errors.category}
+            helperText={errors.category}
             fullWidth
           />
 
@@ -94,6 +160,8 @@ export default function ProductDialog({
             type="number"
             value={form.stock}
             onChange={handleChange}
+            error={!!errors.stock}
+            helperText={errors.stock}
             fullWidth
           />
 
@@ -103,6 +171,8 @@ export default function ProductDialog({
             type="number"
             value={form.price}
             onChange={handleChange}
+            error={!!errors.price}
+            helperText={errors.price}
             fullWidth
           />
         </Stack>
@@ -117,7 +187,9 @@ export default function ProductDialog({
           variant="contained"
           onClick={handleSave}
         >
-          {mode === "edit" ? "Update" : "Save"}
+          {mode === "edit"
+            ? "Update"
+            : "Save"}
         </Button>
       </DialogActions>
     </Dialog>

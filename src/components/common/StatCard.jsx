@@ -1,20 +1,24 @@
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 import TrendingDownRoundedIcon from "@mui/icons-material/TrendingDownRounded";
+
 import {
+  Box,
   Card,
   CardContent,
   Chip,
   Stack,
   Typography,
-  Box,
 } from "@mui/material";
 
 export default function StatCard({
   title,
   value,
-  change,
+  change = null,
+  icon = null,
 }) {
-  const positive = change.startsWith("+");
+  const positive =
+    typeof change === "string" &&
+    change.startsWith("+");
 
   return (
     <Card
@@ -43,11 +47,15 @@ export default function StatCard({
               {title}
             </Typography>
 
-            {positive ? (
-              <TrendingUpRoundedIcon color="success" />
-            ) : (
-              <TrendingDownRoundedIcon color="error" />
-            )}
+            {icon ? (
+              icon
+            ) : change ? (
+              positive ? (
+                <TrendingUpRoundedIcon color="success" />
+              ) : (
+                <TrendingDownRoundedIcon color="error" />
+              )
+            ) : null}
           </Box>
 
           <Typography
@@ -57,15 +65,19 @@ export default function StatCard({
             {value}
           </Typography>
 
-          <Chip
-            label={change}
-            color={positive ? "success" : "error"}
-            size="small"
-            sx={{
-              width: "fit-content",
-              fontWeight: 700,
-            }}
-          />
+          {change && (
+            <Chip
+              label={change}
+              color={
+                positive ? "success" : "error"
+              }
+              size="small"
+              sx={{
+                width: "fit-content",
+                fontWeight: 700,
+              }}
+            />
+          )}
         </Stack>
       </CardContent>
     </Card>
