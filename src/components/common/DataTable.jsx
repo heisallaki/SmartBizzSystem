@@ -18,6 +18,17 @@ import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 export default function DataTable({
   columns,
   rows,
+  emptyTitle = "No data found",
+  emptyDescription = "Try changing your search or filters.",
+  emptyIcon = (
+    <Inventory2OutlinedIcon
+      sx={{
+        fontSize: 64,
+        color: "text.secondary",
+        mb: 2,
+      }}
+    />
+  ),
 }) {
   const [page, setPage] = useState(0);
 
@@ -55,6 +66,7 @@ export default function DataTable({
     setRowsPerPage(
       parseInt(event.target.value, 10)
     );
+
     setPage(0);
   };
 
@@ -115,27 +127,20 @@ export default function DataTable({
                     justifyContent="center"
                     textAlign="center"
                   >
-                    <Inventory2OutlinedIcon
-                      sx={{
-                        fontSize: 64,
-                        color: "text.secondary",
-                        mb: 2,
-                      }}
-                    />
+                    {emptyIcon}
 
                     <Typography
                       variant="h6"
                       fontWeight={600}
                     >
-                      No products found
+                      {emptyTitle}
                     </Typography>
 
                     <Typography
                       variant="body2"
                       color="text.secondary"
                     >
-                      Try changing your search
-                      or filters.
+                      {emptyDescription}
                     </Typography>
                   </Box>
                 </TableCell>
