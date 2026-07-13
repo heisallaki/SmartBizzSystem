@@ -102,6 +102,42 @@ const customerService = {
     return true;
   },
 
+  /**
+   * Called by the Sales feature when a sale is completed for a registered
+   * (non walk-in) customer. Updates order totals and appends a
+   * purchaseHistory entry shaped for CustomerDetailsDrawer:
+   * { id, invoice, date, total }.
+   */
+  async recordPurchase(customerId, sale) {
+    await simulateDelay();
+
+    let updatedCustomer = null;
+
+    customers = customers.map((customer) => {
+      if (customer.id !== customerId) return customer;
+
+      const purchaseEntry = {
+        id: sale.id,
+        invoice: sale.invoice,
+        date: sale.date,
+        total: sale.total,
+      };
+
+      updatedCustomer = {
+        ...customer,
+        totalOrders: customer.totalOrders + 1,
+        totalSpent: customer.totalSpent + sale.total,
+        lastPurchase: sale.date,
+        purchaseHistory: [purchaseEntry, ...customer.purchaseHistory],
+        updatedAt: new Date().toISOString(),
+      };
+
+      return updatedCustomer;
+    });
+
+    return updatedCustomer;
+  },
+
   async search(query) {
     await simulateDelay();
 

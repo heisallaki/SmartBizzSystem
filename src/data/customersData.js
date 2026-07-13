@@ -1,5 +1,3 @@
-// src/data/customersData.js
-
 const customersData = [
   {
     id: "CUS-1001",
