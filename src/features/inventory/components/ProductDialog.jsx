@@ -7,8 +7,16 @@ import {
   Stack,
   TextField,
 } from "@mui/material";
-
 import { useEffect, useState } from "react";
+
+const EMPTY_PRODUCT = {
+  sku: "",
+  name: "",
+  category: "",
+  stock: "",
+  price: "",
+  status: "In Stock",
+};
 
 export default function ProductDialog({
   open,
@@ -17,24 +25,14 @@ export default function ProductDialog({
   selectedProduct,
   mode,
 }) {
-  const emptyProduct = {
-    sku: "",
-    name: "",
-    category: "",
-    stock: "",
-    price: "",
-    status: "In Stock",
-  };
-
-  const [form, setForm] = useState(emptyProduct);
-
+  const [form, setForm] = useState(EMPTY_PRODUCT);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (selectedProduct) {
       setForm(selectedProduct);
     } else {
-      setForm(emptyProduct);
+      setForm(EMPTY_PRODUCT);
     }
 
     setErrors({});
@@ -43,13 +41,13 @@ export default function ProductDialog({
   const handleChange = (event) => {
     const { name, value } = event.target;
 
-    setForm((previousForm) => ({
-      ...previousForm,
+    setForm((previous) => ({
+      ...previous,
       [name]: value,
     }));
 
-    setErrors((previousErrors) => ({
-      ...previousErrors,
+    setErrors((previous) => ({
+      ...previous,
       [name]: "",
     }));
   };
@@ -62,26 +60,21 @@ export default function ProductDialog({
     }
 
     if (!form.name.trim()) {
-      validationErrors.name =
-        "Product name is required.";
+      validationErrors.name = "Product name is required.";
     }
 
     if (!form.category.trim()) {
-      validationErrors.category =
-        "Category is required.";
+      validationErrors.category = "Category is required.";
     }
 
     if (form.stock === "") {
-      validationErrors.stock =
-        "Stock quantity is required.";
+      validationErrors.stock = "Stock quantity is required.";
     } else if (Number(form.stock) < 0) {
-      validationErrors.stock =
-        "Stock cannot be negative.";
+      validationErrors.stock = "Stock cannot be negative.";
     }
 
     if (form.price === "") {
-      validationErrors.price =
-        "Price is required.";
+      validationErrors.price = "Price is required.";
     } else if (Number(form.price) <= 0) {
       validationErrors.price =
         "Price must be greater than zero.";
@@ -93,9 +86,7 @@ export default function ProductDialog({
   };
 
   const handleSave = () => {
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     onSave({
       ...form,
@@ -103,9 +94,8 @@ export default function ProductDialog({
       price: Number(form.price),
     });
 
-    setForm(emptyProduct);
+    setForm(EMPTY_PRODUCT);
     setErrors({});
-
     onClose();
   };
 

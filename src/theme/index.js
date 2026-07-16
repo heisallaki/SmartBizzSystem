@@ -1,2 +1,1 @@
-export { default as theme } from "./theme";
-export { colors } from "./colors";
+export { buildTheme } from "./theme";

@@ -8,7 +8,6 @@ import {
   Stack,
   TextField,
 } from "@mui/material";
-
 import { useEffect, useState } from "react";
 
 const STATUS_OPTIONS = [
@@ -17,7 +16,19 @@ const STATUS_OPTIONS = [
   "Inactive",
 ];
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_PATTERN =
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const EMPTY_SUPPLIER = {
+  name: "",
+  contactPerson: "",
+  email: "",
+  phone: "",
+  category: "",
+  totalOrders: "",
+  totalSpend: "",
+  status: "Active",
+};
 
 export default function SupplierDialog({
   open,
@@ -26,18 +37,9 @@ export default function SupplierDialog({
   selectedSupplier,
   mode,
 }) {
-  const emptySupplier = {
-    name: "",
-    contactPerson: "",
-    email: "",
-    phone: "",
-    category: "",
-    totalOrders: "",
-    totalSpend: "",
-    status: "Active",
-  };
-
-  const [form, setForm] = useState(emptySupplier);
+  const [form, setForm] = useState(
+    EMPTY_SUPPLIER
+  );
 
   const [errors, setErrors] = useState({});
 
@@ -45,7 +47,7 @@ export default function SupplierDialog({
     if (selectedSupplier) {
       setForm(selectedSupplier);
     } else {
-      setForm(emptySupplier);
+      setForm(EMPTY_SUPPLIER);
     }
 
     setErrors({});
@@ -54,13 +56,13 @@ export default function SupplierDialog({
   const handleChange = (event) => {
     const { name, value } = event.target;
 
-    setForm((previousForm) => ({
-      ...previousForm,
+    setForm((previous) => ({
+      ...previous,
       [name]: value,
     }));
 
-    setErrors((previousErrors) => ({
-      ...previousErrors,
+    setErrors((previous) => ({
+      ...previous,
       [name]: "",
     }));
   };
@@ -101,7 +103,9 @@ export default function SupplierDialog({
     if (form.totalOrders === "") {
       validationErrors.totalOrders =
         "Total orders is required.";
-    } else if (Number(form.totalOrders) < 0) {
+    } else if (
+      Number(form.totalOrders) < 0
+    ) {
       validationErrors.totalOrders =
         "Orders cannot be negative.";
     }
@@ -109,30 +113,36 @@ export default function SupplierDialog({
     if (form.totalSpend === "") {
       validationErrors.totalSpend =
         "Total spend is required.";
-    } else if (Number(form.totalSpend) < 0) {
+    } else if (
+      Number(form.totalSpend) < 0
+    ) {
       validationErrors.totalSpend =
         "Total spend cannot be negative.";
     }
 
     setErrors(validationErrors);
 
-    return Object.keys(validationErrors).length === 0;
+    return (
+      Object.keys(validationErrors)
+        .length === 0
+    );
   };
 
   const handleSave = () => {
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     onSave({
       ...form,
-      totalOrders: Number(form.totalOrders),
-      totalSpend: Number(form.totalSpend),
+      totalOrders: Number(
+        form.totalOrders
+      ),
+      totalSpend: Number(
+        form.totalSpend
+      ),
     });
 
-    setForm(emptySupplier);
+    setForm(EMPTY_SUPPLIER);
     setErrors({});
-
     onClose();
   };
 
@@ -166,8 +176,12 @@ export default function SupplierDialog({
             name="contactPerson"
             value={form.contactPerson}
             onChange={handleChange}
-            error={!!errors.contactPerson}
-            helperText={errors.contactPerson}
+            error={
+              !!errors.contactPerson
+            }
+            helperText={
+              errors.contactPerson
+            }
             fullWidth
           />
 
@@ -198,7 +212,9 @@ export default function SupplierDialog({
             value={form.category}
             onChange={handleChange}
             error={!!errors.category}
-            helperText={errors.category}
+            helperText={
+              errors.category
+            }
             fullWidth
           />
 
@@ -208,8 +224,12 @@ export default function SupplierDialog({
             type="number"
             value={form.totalOrders}
             onChange={handleChange}
-            error={!!errors.totalOrders}
-            helperText={errors.totalOrders}
+            error={
+              !!errors.totalOrders
+            }
+            helperText={
+              errors.totalOrders
+            }
             fullWidth
           />
 
@@ -219,8 +239,12 @@ export default function SupplierDialog({
             type="number"
             value={form.totalSpend}
             onChange={handleChange}
-            error={!!errors.totalSpend}
-            helperText={errors.totalSpend}
+            error={
+              !!errors.totalSpend
+            }
+            helperText={
+              errors.totalSpend
+            }
             fullWidth
           />
 
@@ -232,14 +256,16 @@ export default function SupplierDialog({
             onChange={handleChange}
             fullWidth
           >
-            {STATUS_OPTIONS.map((option) => (
-              <MenuItem
-                key={option}
-                value={option}
-              >
-                {option}
-              </MenuItem>
-            ))}
+            {STATUS_OPTIONS.map(
+              (option) => (
+                <MenuItem
+                  key={option}
+                  value={option}
+                >
+                  {option}
+                </MenuItem>
+              )
+            )}
           </TextField>
         </Stack>
       </DialogContent>
