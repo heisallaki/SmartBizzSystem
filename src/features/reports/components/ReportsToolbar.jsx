@@ -17,11 +17,15 @@ import {
   REPORT_TABS,
 } from "../constants/reports.constants";
 
+import DateRangePicker from "./DateRangePicker";
+
 function ReportsToolbar({
   selectedTab,
   dateFilter,
+  customRange = { startDate: null, endDate: null },
   onTabChange,
   onDateFilterChange,
+  onCustomRangeChange = () => {},
   onRefresh,
 }) {
   return (
@@ -38,30 +42,43 @@ function ReportsToolbar({
         }}
         spacing={2}
       >
-        <TextField
-          select
-          label="Date Range"
-          value={dateFilter}
-          onChange={(event) =>
-            onDateFilterChange(event.target.value)
-          }
-          size="small"
-          sx={{
-            minWidth: {
-              xs: "100%",
-              md: 220,
-            },
-          }}
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          alignItems={{ xs: "stretch", sm: "center" }}
+          spacing={2}
         >
-          {REPORT_DATE_FILTERS.map((option) => (
-            <MenuItem
-              key={option.value}
-              value={option.value}
-            >
-              {option.label}
-            </MenuItem>
-          ))}
-        </TextField>
+          <TextField
+            select
+            label="Date Range"
+            value={dateFilter}
+            onChange={(event) =>
+              onDateFilterChange(event.target.value)
+            }
+            size="small"
+            sx={{
+              minWidth: {
+                xs: "100%",
+                md: 220,
+              },
+            }}
+          >
+            {REPORT_DATE_FILTERS.map((option) => (
+              <MenuItem
+                key={option.value}
+                value={option.value}
+              >
+                {option.label}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          {dateFilter === "custom" && (
+            <DateRangePicker
+              value={customRange}
+              onChange={onCustomRangeChange}
+            />
+          )}
+        </Stack>
 
         <Button
           variant="outlined"
@@ -100,8 +117,13 @@ function ReportsToolbar({
 ReportsToolbar.propTypes = {
   selectedTab: PropTypes.string.isRequired,
   dateFilter: PropTypes.string.isRequired,
+  customRange: PropTypes.shape({
+    startDate: PropTypes.string,
+    endDate: PropTypes.string,
+  }),
   onTabChange: PropTypes.func.isRequired,
   onDateFilterChange: PropTypes.func.isRequired,
+  onCustomRangeChange: PropTypes.func,
   onRefresh: PropTypes.func.isRequired,
 };
 

@@ -27,11 +27,22 @@ export default function useReports() {
   const [bestSellingProducts, setBestSellingProducts] = useState([]);
   const [lowStockProducts, setLowStockProducts] = useState([]);
 
+  // Avoid firing a fetch with a half-picked custom range — keeps whatever
+  // was last loaded on screen until both dates are set.
+  const isCustomRangeReady =
+    dateFilter !== "custom" ||
+    Boolean(customRange.startDate && customRange.endDate);
+
   const loadReports = useCallback(async () => {
+    if (!isCustomRangeReady) return;
+
     setLoading(true);
 
     try {
-      const data = await fetchReports();
+      const data = await fetchReports(
+        dateFilter,
+        dateFilter === "custom" ? customRange : null
+      );
 
       setStats(data.stats);
       setRevenueTrend(data.revenue);
@@ -45,7 +56,7 @@ export default function useReports() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [dateFilter, customRange, isCustomRangeReady]);
 
   useEffect(() => {
     loadReports();
@@ -101,22 +112,10 @@ export default function useReports() {
       rows: salesReport,
 
       summary: [
-        {
-          label: "Revenue",
-          value: summary.revenue,
-        },
-        {
-          label: "Gross Profit",
-          value: summary.grossProfit,
-        },
-        {
-          label: "Net Profit",
-          value: summary.netProfit,
-        },
-        {
-          label: "Total Sales",
-          value: summary.totalSales,
-        },
+        { label: "Revenue", value: summary.revenue },
+        { label: "Gross Profit", value: summary.grossProfit },
+        { label: "Net Profit", value: summary.netProfit },
+        { label: "Total Sales", value: summary.totalSales },
       ],
     });
   }, [salesReport, summary]);
@@ -139,18 +138,9 @@ export default function useReports() {
       rows: salesReport,
 
       summary: [
-        {
-          label: "Revenue",
-          value: summary.revenue,
-        },
-        {
-          label: "Gross Profit",
-          value: summary.grossProfit,
-        },
-        {
-          label: "Net Profit",
-          value: summary.netProfit,
-        },
+        { label: "Revenue", value: summary.revenue },
+        { label: "Gross Profit", value: summary.grossProfit },
+        { label: "Net Profit", value: summary.netProfit },
       ],
     });
   }, [salesReport, summary]);

@@ -8,7 +8,9 @@ import SalesToolbar from "./components/SalesToolbar";
 import SalesTable from "./components/SalesTable";
 import SalesTableSkeleton from "./components/SalesTableSkeleton";
 import CreateSaleDialog from "./components/CreateSaleDialog";
+import EditSaleDialog from "./components/EditSaleDialog";
 import SaleDetailsDialog from "./components/SaleDetailsDialog";
+import SaleConfirmDialog from "./components/SaleConfirmDialog";
 
 import useSales from "./hooks/useSales";
 
@@ -52,10 +54,24 @@ export default function SalesPage() {
     detailsDialogOpen,
     setDetailsDialogOpen,
 
+    editDialogOpen,
+    setEditDialogOpen,
+
+    confirmDialogOpen,
+    confirmAction,
+    confirmLoading,
+    openVoidConfirm,
+    openDeleteConfirm,
+    closeConfirmDialog,
+    confirmSaleAction,
+
+    openEditDialog,
+
     selectedSale,
     setSelectedSale,
 
     addSaleToList,
+    updateSaleInList,
 
     snackbar,
     showSnackbar,
@@ -65,11 +81,17 @@ export default function SalesPage() {
   const handleSaleCreated = (sale) => {
     addSaleToList(sale);
 
-    showSnackbar(
-      "Sale completed successfully."
-    );
+    showSnackbar("Sale completed successfully.");
 
     setCreateDialogOpen(false);
+  };
+
+  const handleSaleUpdated = (sale) => {
+    updateSaleInList(sale);
+
+    showSnackbar("Sale updated successfully.");
+
+    setEditDialogOpen(false);
   };
 
   const handleViewSale = (sale) => {
@@ -109,9 +131,7 @@ export default function SalesPage() {
         sortBy={sortBy}
         sortOptions={sortOptions}
         onSortChange={setSortBy}
-        onAddSale={() =>
-          setCreateDialogOpen(true)
-        }
+        onAddSale={() => setCreateDialogOpen(true)}
       />
 
       {loading ? (
@@ -125,18 +145,33 @@ export default function SalesPage() {
 
       <CreateSaleDialog
         open={createDialogOpen}
-        onClose={() =>
-          setCreateDialogOpen(false)
-        }
+        onClose={() => setCreateDialogOpen(false)}
         onSaleCreated={handleSaleCreated}
+      />
+
+      <EditSaleDialog
+        open={editDialogOpen}
+        sale={selectedSale}
+        onClose={() => setEditDialogOpen(false)}
+        onSaleUpdated={handleSaleUpdated}
       />
 
       <SaleDetailsDialog
         open={detailsDialogOpen}
         sale={selectedSale}
-        onClose={() =>
-          setDetailsDialogOpen(false)
-        }
+        onClose={() => setDetailsDialogOpen(false)}
+        onEdit={openEditDialog}
+        onVoid={openVoidConfirm}
+        onDelete={openDeleteConfirm}
+      />
+
+      <SaleConfirmDialog
+        open={confirmDialogOpen}
+        sale={selectedSale}
+        action={confirmAction}
+        loading={confirmLoading}
+        onClose={closeConfirmDialog}
+        onConfirm={confirmSaleAction}
       />
 
       <SnackbarAlert

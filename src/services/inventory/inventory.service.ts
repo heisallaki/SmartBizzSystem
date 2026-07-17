@@ -99,6 +99,35 @@ const inventoryService = {
 
     return true;
   },
+
+  /**
+   * Restores stock for each { productId, quantity } pair — called when a
+   * sale is voided, deleted, or edited (to reverse its original effect
+   * before optionally re-applying updated effects). Mirrors decrementStock.
+   */
+  async incrementStock(
+    items: { productId: number; quantity: number }[]
+  ) {
+    await delay(200);
+
+    products = products.map((product) => {
+      const restoredItem = items.find(
+        (item) => item.productId === product.id
+      );
+
+      if (!restoredItem) return product;
+
+      const newStock = product.stock + restoredItem.quantity;
+
+      return {
+        ...product,
+        stock: newStock,
+        status: computeStatus(newStock),
+      };
+    });
+
+    return true;
+  },
 };
 
 export default inventoryService;

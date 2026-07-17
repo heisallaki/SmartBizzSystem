@@ -26,6 +26,7 @@ function ReportsPage() {
 
     selectedTab,
     dateFilter,
+    customRange,
 
     stats,
 
@@ -41,6 +42,7 @@ function ReportsPage() {
 
     setSelectedTab,
     setDateFilter,
+    setCustomRange,
 
     exportPdf,
     exportExcel,
@@ -101,8 +103,10 @@ function ReportsPage() {
         <ReportsToolbar
           selectedTab={selectedTab}
           dateFilter={dateFilter}
+          customRange={customRange}
           onTabChange={setSelectedTab}
           onDateFilterChange={setDateFilter}
+          onCustomRangeChange={setCustomRange}
           onRefresh={refreshReports}
         />
       </Paper>
@@ -120,7 +124,7 @@ function ReportsPage() {
             >
               <RevenueChart
                 title="Revenue & Profit Trends"
-                subtitle="Monthly business performance"
+                subtitle="Business performance for the selected period"
                 data={revenueTrend}
               />
             </Grid>

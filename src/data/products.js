@@ -6,6 +6,7 @@ const initialProducts = [
     category: "Printer Accessories",
     stock: 18,
     price: 4500,
+    costPrice: 3000,
     status: "In Stock",
   },
   {
@@ -15,6 +16,7 @@ const initialProducts = [
     category: "Accessories",
     stock: 6,
     price: 1200,
+    costPrice: 750,
     status: "Low Stock",
   },
   {
@@ -24,6 +26,7 @@ const initialProducts = [
     category: "Storage",
     stock: 0,
     price: 1500,
+    costPrice: 950,
     status: "Out of Stock",
   },
   {
@@ -33,6 +36,7 @@ const initialProducts = [
     category: "Accessories",
     stock: 14,
     price: 5200,
+    costPrice: 3400,
     status: "In Stock",
   },
 ];

@@ -17,29 +17,23 @@ export default function useSales() {
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
-  const [dateFilter, setDateFilter] =
-    useState("");
+  const [dateFilter, setDateFilter] = useState("");
 
-  const [customerFilter, setCustomerFilter] =
-    useState("All");
+  const [customerFilter, setCustomerFilter] = useState("All");
+  const [paymentFilter, setPaymentFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
 
-  const [paymentFilter, setPaymentFilter] =
-    useState("All");
+  const [sortBy, setSortBy] = useState("Newest");
 
-  const [statusFilter, setStatusFilter] =
-    useState("All");
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
-  const [sortBy, setSortBy] =
-    useState("Newest");
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState("void");
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
-  const [createDialogOpen, setCreateDialogOpen] =
-    useState(false);
-
-  const [detailsDialogOpen, setDetailsDialogOpen] =
-    useState(false);
-
-  const [selectedSale, setSelectedSale] =
-    useState(null);
+  const [selectedSale, setSelectedSale] = useState(null);
 
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -51,17 +45,13 @@ export default function useSales() {
     setLoading(true);
 
     try {
-      const data =
-        await salesService.getSales();
+      const data = await salesService.getSales();
 
       setSales(data || []);
     } catch (error) {
       console.error(error);
 
-      showSnackbar(
-        "Failed to load sales.",
-        "error"
-      );
+      showSnackbar("Failed to load sales.", "error");
     } finally {
       setLoading(false);
     }
@@ -71,52 +61,43 @@ export default function useSales() {
     loadSales();
   }, [loadSales]);
 
-  const showSnackbar = (
-    message,
-    severity = "success"
-  ) => {
-    setSnackbar({
-      open: true,
-      severity,
-      message,
-    });
+  const showSnackbar = (message, severity = "success") => {
+    setSnackbar({ open: true, severity, message });
   };
 
   const closeSnackbar = () => {
-    setSnackbar((previous) => ({
-      ...previous,
-      open: false,
-    }));
+    setSnackbar((previous) => ({ ...previous, open: false }));
   };
 
   const addSaleToList = (sale) => {
-    setSales((previous) => [
-      sale,
-      ...previous,
-    ]);
+    setSales((previous) => [sale, ...previous]);
+  };
+
+  const updateSaleInList = (updatedSale) => {
+    setSales((previous) =>
+      previous.map((sale) =>
+        sale.id === updatedSale.id ? updatedSale : sale
+      )
+    );
+  };
+
+  const removeSaleFromList = (saleId) => {
+    setSales((previous) =>
+      previous.filter((sale) => sale.id !== saleId)
+    );
   };
 
   const customerOptions = useMemo(
     () => [
       "All",
-      ...new Set(
-        sales.map(
-          (sale) => sale.customerName
-        )
-      ),
+      ...new Set(sales.map((sale) => sale.customerName)),
     ],
     [sales]
   );
 
-  const paymentOptions = [
-    "All",
-    ...PAYMENT_METHODS,
-  ];
+  const paymentOptions = ["All", ...PAYMENT_METHODS];
 
-  const statusOptions = [
-    "All",
-    ...SALE_STATUS_OPTIONS,
-  ];
+  const statusOptions = ["All", ...SALE_STATUS_OPTIONS];
 
   const sortOptions = [
     "Newest",
@@ -129,82 +110,50 @@ export default function useSales() {
     let rows = [...sales];
 
     if (search.trim()) {
-      const query =
-        search.toLowerCase();
+      const query = search.toLowerCase();
 
       rows = rows.filter(
         (sale) =>
-          sale.invoice
-            ?.toLowerCase()
-            .includes(query) ||
-          sale.customerName
-            ?.toLowerCase()
-            .includes(query)
+          sale.invoice?.toLowerCase().includes(query) ||
+          sale.customerName?.toLowerCase().includes(query)
       );
     }
 
     if (dateFilter) {
+      rows = rows.filter((sale) => sale.date === dateFilter);
+    }
+
+    if (customerFilter !== "All") {
       rows = rows.filter(
-        (sale) =>
-          sale.date === dateFilter
+        (sale) => sale.customerName === customerFilter
       );
     }
 
-    if (
-      customerFilter !== "All"
-    ) {
+    if (paymentFilter !== "All") {
       rows = rows.filter(
-        (sale) =>
-          sale.customerName ===
-          customerFilter
+        (sale) => sale.paymentMethod === paymentFilter
       );
     }
 
-    if (
-      paymentFilter !== "All"
-    ) {
-      rows = rows.filter(
-        (sale) =>
-          sale.paymentMethod ===
-          paymentFilter
-      );
-    }
-
-    if (
-      statusFilter !== "All"
-    ) {
-      rows = rows.filter(
-        (sale) =>
-          sale.status ===
-          statusFilter
-      );
+    if (statusFilter !== "All") {
+      rows = rows.filter((sale) => sale.status === statusFilter);
     }
 
     switch (sortBy) {
       case "Newest":
-        rows.sort(
-          (a, b) => b.id - a.id
-        );
+        rows.sort((a, b) => b.id - a.id);
         break;
 
       case "Oldest":
-        rows.sort(
-          (a, b) => a.id - b.id
-        );
+        rows.sort((a, b) => a.id - b.id);
         break;
 
       case "Highest Amount":
-        rows.sort(
-          (a, b) =>
-            b.total - a.total
-        );
+        rows.sort((a, b) => b.total - a.total);
         break;
 
       case "Lowest Amount":
-        rows.sort(
-          (a, b) =>
-            a.total - b.total
-        );
+        rows.sort((a, b) => a.total - b.total);
         break;
 
       default:
@@ -222,26 +171,16 @@ export default function useSales() {
     sortBy,
   ]);
 
-  const todayKey =
-    new Date()
-      .toISOString()
-      .slice(0, 10);
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const monthKey = todayKey.slice(0, 7);
 
-  const monthKey =
-    todayKey.slice(0, 7);
-      const todaySales = useMemo(
-    () =>
-      sales.filter(
-        (sale) => sale.date === todayKey
-      ),
+  const todaySales = useMemo(
+    () => sales.filter((sale) => sale.date === todayKey),
     [sales, todayKey]
   );
 
   const monthlySales = useMemo(
-    () =>
-      sales.filter((sale) =>
-        sale.date.startsWith(monthKey)
-      ),
+    () => sales.filter((sale) => sale.date.startsWith(monthKey)),
     [sales, monthKey]
   );
 
@@ -250,26 +189,76 @@ export default function useSales() {
     0
   );
 
-  const todaySalesCount =
-    todaySales.length;
+  const todaySalesCount = todaySales.length;
 
-  const monthlyRevenue =
-    monthlySales.reduce(
-      (sum, sale) => sum + sale.total,
-      0
-    );
+  const monthlyRevenue = monthlySales.reduce(
+    (sum, sale) => sum + sale.total,
+    0
+  );
 
-  const monthlySalesCount =
-    monthlySales.length;
+  const monthlySalesCount = monthlySales.length;
 
   const averageOrderValue =
     sales.length > 0
-      ? sales.reduce(
-          (sum, sale) =>
-            sum + sale.total,
-          0
-        ) / sales.length
+      ? sales.reduce((sum, sale) => sum + sale.total, 0) /
+        sales.length
       : 0;
+
+  const openEditDialog = (sale) => {
+    setSelectedSale(sale);
+    setDetailsDialogOpen(false);
+    setEditDialogOpen(true);
+  };
+
+  const openVoidConfirm = (sale) => {
+    setSelectedSale(sale);
+    setConfirmAction("void");
+    setDetailsDialogOpen(false);
+    setConfirmDialogOpen(true);
+  };
+
+  const openDeleteConfirm = (sale) => {
+    setSelectedSale(sale);
+    setConfirmAction("delete");
+    setDetailsDialogOpen(false);
+    setConfirmDialogOpen(true);
+  };
+
+  const closeConfirmDialog = () => {
+    if (confirmLoading) return;
+    setConfirmDialogOpen(false);
+  };
+
+  const confirmSaleAction = async () => {
+    if (!selectedSale) return;
+
+    setConfirmLoading(true);
+
+    try {
+      if (confirmAction === "delete") {
+        await salesService.deleteSale(selectedSale.id);
+        removeSaleFromList(selectedSale.id);
+        showSnackbar("Sale deleted.");
+      } else {
+        const voided = await salesService.voidSale(selectedSale.id);
+        updateSaleInList(voided);
+        showSnackbar("Sale voided.");
+      }
+
+      setConfirmDialogOpen(false);
+    } catch (error) {
+      console.error(error);
+
+      showSnackbar(
+        confirmAction === "delete"
+          ? "Failed to delete sale."
+          : "Failed to void sale.",
+        "error"
+      );
+    } finally {
+      setConfirmLoading(false);
+    }
+  };
 
   return {
     loading,
@@ -312,10 +301,25 @@ export default function useSales() {
     detailsDialogOpen,
     setDetailsDialogOpen,
 
+    editDialogOpen,
+    setEditDialogOpen,
+
+    confirmDialogOpen,
+    confirmAction,
+    confirmLoading,
+    openVoidConfirm,
+    openDeleteConfirm,
+    closeConfirmDialog,
+    confirmSaleAction,
+
+    openEditDialog,
+
     selectedSale,
     setSelectedSale,
 
     addSaleToList,
+    updateSaleInList,
+    removeSaleFromList,
 
     snackbar,
     showSnackbar,

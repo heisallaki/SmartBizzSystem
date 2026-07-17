@@ -138,6 +138,45 @@ const customerService = {
     return updatedCustomer;
   },
 
+  /**
+   * Reverses recordPurchase for a voided/deleted/edited sale — removes the
+   * matching purchaseHistory entry and rolls back totals. No-ops if the
+   * customer has no matching entry (e.g. walk-in sales, or seed customers
+   * whose lifetime totals predate purchaseHistory tracking).
+   */
+  async reversePurchase(customerId, saleId) {
+    await simulateDelay();
+
+    let updatedCustomer = null;
+
+    customers = customers.map((customer) => {
+      if (customer.id !== customerId) return customer;
+
+      const entry = customer.purchaseHistory.find(
+        (purchase) => purchase.id === saleId
+      );
+
+      if (!entry) return customer;
+
+      const remainingHistory = customer.purchaseHistory.filter(
+        (purchase) => purchase.id !== saleId
+      );
+
+      updatedCustomer = {
+        ...customer,
+        totalOrders: Math.max(0, customer.totalOrders - 1),
+        totalSpent: Math.max(0, customer.totalSpent - entry.total),
+        lastPurchase: remainingHistory[0]?.date ?? null,
+        purchaseHistory: remainingHistory,
+        updatedAt: new Date().toISOString(),
+      };
+
+      return updatedCustomer;
+    });
+
+    return updatedCustomer;
+  },
+
   async search(query) {
     await simulateDelay();
 

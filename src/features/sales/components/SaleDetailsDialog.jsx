@@ -42,8 +42,13 @@ export default function SaleDetailsDialog({
   open,
   sale,
   onClose,
+  onEdit,
+  onVoid,
+  onDelete,
 }) {
   if (!sale) return null;
+
+  const isCancelled = sale.status === "Cancelled";
 
   return (
     <Dialog
@@ -272,6 +277,30 @@ export default function SaleDetailsDialog({
       <DialogActions>
         <Button onClick={onClose}>
           Close
+        </Button>
+
+        <Button
+          color="error"
+          variant="outlined"
+          onClick={() => onDelete(sale)}
+        >
+          Delete
+        </Button>
+
+        <Button
+          color="warning"
+          variant="outlined"
+          disabled={isCancelled}
+          onClick={() => onVoid(sale)}
+        >
+          Void
+        </Button>
+
+        <Button
+          variant="contained"
+          onClick={() => onEdit(sale)}
+        >
+          Edit
         </Button>
       </DialogActions>
     </Dialog>
