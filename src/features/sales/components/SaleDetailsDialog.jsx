@@ -1,3 +1,6 @@
+import PrintOutlinedIcon from "@mui/icons-material/PrintOutlined";
+import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
+
 import {
   Chip,
   Dialog,
@@ -6,6 +9,7 @@ import {
   DialogTitle,
   Divider,
   Button,
+  IconButton,
   Paper,
   Stack,
   Table,
@@ -13,8 +17,12 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  Tooltip,
   Typography,
 } from "@mui/material";
+
+import { printSaleReceipt } from "../services/receiptPrint";
+import { exportSaleReceiptToPdf } from "../services/receiptPdf";
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat("en-KE", {
@@ -274,34 +282,60 @@ export default function SaleDetailsDialog({
         </Stack>
       </DialogContent>
 
-      <DialogActions>
-        <Button onClick={onClose}>
-          Close
-        </Button>
+      <DialogActions
+        sx={{
+          justifyContent: "space-between",
+          px: 3,
+          py: 2,
+        }}
+      >
+        <Stack direction="row" spacing={1}>
+          <Tooltip title="Print Receipt">
+            <IconButton
+              onClick={() => printSaleReceipt(sale)}
+            >
+              <PrintOutlinedIcon />
+            </IconButton>
+          </Tooltip>
 
-        <Button
-          color="error"
-          variant="outlined"
-          onClick={() => onDelete(sale)}
-        >
-          Delete
-        </Button>
+          <Tooltip title="Download PDF">
+            <IconButton
+              onClick={() => exportSaleReceiptToPdf(sale)}
+            >
+              <PictureAsPdfOutlinedIcon />
+            </IconButton>
+          </Tooltip>
+        </Stack>
 
-        <Button
-          color="warning"
-          variant="outlined"
-          disabled={isCancelled}
-          onClick={() => onVoid(sale)}
-        >
-          Void
-        </Button>
+        <Stack direction="row" spacing={1}>
+          <Button onClick={onClose}>
+            Close
+          </Button>
 
-        <Button
-          variant="contained"
-          onClick={() => onEdit(sale)}
-        >
-          Edit
-        </Button>
+          <Button
+            color="error"
+            variant="outlined"
+            onClick={() => onDelete(sale)}
+          >
+            Delete
+          </Button>
+
+          <Button
+            color="warning"
+            variant="outlined"
+            disabled={isCancelled}
+            onClick={() => onVoid(sale)}
+          >
+            Void
+          </Button>
+
+          <Button
+            variant="contained"
+            onClick={() => onEdit(sale)}
+          >
+            Edit
+          </Button>
+        </Stack>
       </DialogActions>
     </Dialog>
   );
