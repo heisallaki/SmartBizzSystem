@@ -1,0 +1,620 @@
+// ============================================================================
+// SmartBizzSystem — Prisma schema (PostgreSQL / Neon)
+//
+// Translated from database/schema/01..05_*.sql (the MySQL-flavoured design
+// docs). Table and column names are kept snake_case in the actual database
+// via @@map/@map so the DB still matches those design docs 1:1 — only the
+// Prisma Client / JS side gets normal camelCase.
+//
+// Deviations from the original SQL (documented, not accidental):
+//   1. Primary/foreign keys use `Int @default(autoincrement())` instead of
+//      `BIGINT UNSIGNED`. Prisma's BigInt type requires manual JSON
+//      serialization (JSON.stringify chokes on native BigInt) everywhere it
+//      touches an API response, which is a lot of friction for a POS this
+//      size. Postgres INTEGER tops out at ~2.14 billion rows/value — nowhere
+//      close to a real constraint for a single-business SMB app.
+//   2. `VARCHAR ... CHECK (col IN (...))` columns become native Prisma
+//      `enum`s (e.g. UserStatus, SaleStatus, PaymentMethod) instead of plain
+//      strings with a CHECK constraint — real type safety + autocomplete in
+//      the backend code, same guarantees at the DB level.
+//   3. MySQL `FULLTEXT INDEX` has no direct Postgres/Prisma equivalent
+//      without enabling extensions (pg_trgm). Dropped for now; replaced with
+//      plain b-tree indexes on the same columns. `ILIKE` queries cover
+//      search adequately at this scale — pg_trgm can be added later via a
+//      raw SQL migration if search gets heavier.
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// prisma/schema.prisma
+datasource db {
+  provider  = "postgresql"
+  url  	    = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 01 — Identity & Access
+// ─────────────────────────────────────────────────────────────────────────
+
+model Role {
+  id           Int      @id @default(autoincrement())
+  name         String   @unique @db.VarChar(50)
+  description  String?  @db.VarChar(255)
+  isSystemRole Boolean  @default(false) @map("is_system_role")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  users           User[]
+  rolePermissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          Int     @id @default(autoincrement())
+  code        String  @unique @db.VarChar(100) // e.g. sales.void, inventory.edit
+  module      String  @db.VarChar(50) // e.g. sales, inventory, reports
+  description String? @db.VarChar(255)
+
+  rolePermissions RolePermission[]
+
+  @@index([module])
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       Int @map("role_id")
+  permissionId Int @map("permission_id")
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+enum UserStatus {
+  Active
+  Suspended
+  Invited
+}
+
+model User {
+  id           Int        @id @default(autoincrement())
+  roleId       Int        @map("role_id")
+  fullName     String     @db.VarChar(150) @map("full_name")
+  email        String     @unique @db.VarChar(190)
+  phone        String?    @db.VarChar(30)
+  passwordHash String     @db.VarChar(255) @map("password_hash")
+  avatarUrl    String?    @db.VarChar(500) @map("avatar_url")
+  status       UserStatus @default(Active)
+  lastLoginAt  DateTime?  @map("last_login_at")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  deletedAt    DateTime?  @map("deleted_at")
+
+  role Role @relation(fields: [roleId], references: [id])
+
+  // reverse relations — this user acting as cashier / creator / recorder / etc.
+  stockMovements         StockMovement[]
+  sales                  Sale[]
+  purchaseOrders         PurchaseOrder[]
+  expenses               Expense[]
+  businessSettingUpdates BusinessSetting[]
+  systemSettingUpdates   SystemSetting[]
+  auditLogs              AuditLog[]
+  notifications          Notification[]
+  backups                Backup[]
+  reportExports          ReportExport[]
+
+  @@index([roleId])
+  @@index([status])
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 02 — Catalog & Inventory
+// ─────────────────────────────────────────────────────────────────────────
+
+model Category {
+  id               Int      @id @default(autoincrement())
+  name             String   @unique @db.VarChar(100)
+  description      String?  @db.VarChar(255)
+  parentCategoryId Int?     @map("parent_category_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  parent   Category?  @relation("CategoryParent", fields: [parentCategoryId], references: [id], onDelete: SetNull)
+  children Category[] @relation("CategoryParent")
+  products Product[]
+
+  @@index([parentCategoryId])
+  @@map("categories")
+}
+
+enum SupplierStatus {
+  Active
+  Inactive
+}
+
+model Supplier {
+  id            Int            @id @default(autoincrement())
+  name          String         @db.VarChar(150)
+  contactPerson String?        @db.VarChar(150) @map("contact_person")
+  email         String?        @db.VarChar(190)
+  phone         String?        @db.VarChar(30)
+  addressLine   String?        @db.VarChar(255) @map("address_line")
+  city          String?        @db.VarChar(100)
+  county        String?        @db.VarChar(100)
+  country       String         @default("Kenya") @db.VarChar(100)
+  taxNumber     String?        @db.VarChar(50) @map("tax_number")
+  status        SupplierStatus @default(Active)
+  notes         String?        @db.Text
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  deletedAt     DateTime?      @map("deleted_at")
+
+  products       Product[]
+  purchaseOrders PurchaseOrder[]
+  expenses       Expense[]
+
+  @@index([status])
+  @@map("suppliers")
+}
+
+enum ProductStatus {
+  InStock    @map("In Stock")
+  LowStock   @map("Low Stock")
+  OutOfStock @map("Out of Stock")
+}
+
+model Product {
+  id                Int           @id @default(autoincrement())
+  sku               String        @unique @db.VarChar(50)
+  name              String        @db.VarChar(200)
+  categoryId        Int?          @map("category_id")
+  supplierId        Int?          @map("supplier_id") // preferred/default supplier
+  description       String?       @db.Text
+  price             Decimal       @default(0.00) @db.Decimal(12, 2)
+  costPrice         Decimal       @default(0.00) @db.Decimal(12, 2) @map("cost_price")
+  stock             Int           @default(0)
+  lowStockThreshold Int           @default(10) @map("low_stock_threshold")
+  status            ProductStatus @default(InStock) // derived from stock vs threshold, kept denormalized for read speed
+  isActive          Boolean       @default(true) @map("is_active")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+  deletedAt         DateTime?     @map("deleted_at")
+
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  supplier Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+
+  stockMovements     StockMovement[]
+  saleItems          SaleItem[]
+  invoiceItems       InvoiceItem[]
+  purchaseOrderItems PurchaseOrderItem[]
+
+  @@index([categoryId])
+  @@index([supplierId])
+  @@index([status])
+  @@index([name])
+  @@map("products")
+}
+
+enum StockMovementType {
+  Sale
+  Restock
+  Adjustment
+  Return
+  PurchaseOrder @map("Purchase Order")
+  VoidReversal  @map("Void Reversal")
+}
+
+model StockMovement {
+  id             Int               @id @default(autoincrement())
+  productId      Int               @map("product_id")
+  movementType   StockMovementType @map("movement_type")
+  quantityChange Int               @map("quantity_change") // positive = stock in, negative = stock out
+  stockAfter     Int               @map("stock_after")
+  referenceType  String?           @db.VarChar(30) @map("reference_type") // sale, purchase_order, manual, etc.
+  referenceId    Int?              @map("reference_id") // polymorphic — no FK, mirrors reference_type
+  notes          String?           @db.VarChar(255)
+  createdBy      Int?              @map("created_by")
+  createdAt      DateTime          @default(now()) @map("created_at")
+
+  product Product @relation(fields: [productId], references: [id])
+  creator User?   @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+
+  @@index([productId])
+  @@index([referenceType, referenceId])
+  @@index([createdAt])
+  @@map("stock_movements")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 03 — Customers & Sales
+// ─────────────────────────────────────────────────────────────────────────
+
+enum CustomerStatus {
+  Active
+  Inactive
+}
+
+model Customer {
+  id                 Int            @id @default(autoincrement())
+  customerCode       String         @unique @db.VarChar(20) @map("customer_code") // e.g. CUS-1001
+  firstName          String         @db.VarChar(100) @map("first_name")
+  lastName           String         @db.VarChar(100) @map("last_name")
+  email              String?        @db.VarChar(190)
+  phone              String?        @db.VarChar(30)
+  company            String?        @db.VarChar(150)
+  taxNumber          String?        @db.VarChar(50) @map("tax_number")
+  addressLine        String?        @db.VarChar(255) @map("address_line")
+  city               String?        @db.VarChar(100)
+  county             String?        @db.VarChar(100)
+  postalCode         String?        @db.VarChar(20) @map("postal_code")
+  country            String         @default("Kenya") @db.VarChar(100)
+  status             CustomerStatus @default(Active)
+  notes              String?        @db.Text
+  outstandingBalance Decimal        @default(0.00) @db.Decimal(12, 2) @map("outstanding_balance")
+  totalOrders        Int            @default(0) @map("total_orders") // denormalized running total, kept in sync by the sales service
+  totalSpent         Decimal        @default(0.00) @db.Decimal(12, 2) @map("total_spent") // denormalized running total, kept in sync by the sales service
+  lastPurchaseAt     DateTime?      @db.Date @map("last_purchase_at")
+  createdAt          DateTime       @default(now()) @map("created_at")
+  updatedAt          DateTime       @updatedAt @map("updated_at")
+  deletedAt          DateTime?      @map("deleted_at")
+
+  sales    Sale[]
+  invoices Invoice[]
+
+  @@index([status])
+  @@index([city])
+  @@index([lastName, firstName])
+  @@map("customers")
+}
+
+enum PaymentMethod {
+  Cash
+  MPesa        @map("M-Pesa")
+  Card
+  BankTransfer @map("Bank Transfer")
+}
+
+enum SaleStatus {
+  Completed
+  Pending
+  Cancelled
+}
+
+model Sale {
+  id            Int           @id @default(autoincrement())
+  invoiceNumber String        @unique @db.VarChar(20) @map("invoice_number")
+  customerId    Int?          @map("customer_id") // NULL = walk-in customer
+  cashierId     Int           @map("cashier_id")
+  saleDate      DateTime      @db.Date @map("sale_date")
+  subtotal      Decimal       @default(0.00) @db.Decimal(12, 2)
+  discountTotal Decimal       @default(0.00) @db.Decimal(12, 2) @map("discount_total")
+  taxRate       Decimal       @default(16.00) @db.Decimal(5, 2) @map("tax_rate")
+  taxTotal      Decimal       @default(0.00) @db.Decimal(12, 2) @map("tax_total")
+  grandTotal    Decimal       @default(0.00) @db.Decimal(12, 2) @map("grand_total")
+  paymentMethod PaymentMethod @map("payment_method") // primary method for quick display — see Payment for the full ledger
+  status        SaleStatus    @default(Completed)
+  notes         String?       @db.Text
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  cashier  User      @relation(fields: [cashierId], references: [id])
+
+  items    SaleItem[]
+  payments Payment[]
+  invoices Invoice[]
+
+  @@index([customerId])
+  @@index([cashierId])
+  @@index([saleDate])
+  @@index([status])
+  @@index([status, saleDate]) // covers the "completed sales in date range" query Reports runs on every load
+  @@map("sales")
+}
+
+model SaleItem {
+  id           Int     @id @default(autoincrement())
+  saleId       Int     @map("sale_id")
+  productId    Int     @map("product_id")
+  productName  String  @db.VarChar(200) @map("product_name") // snapshot at time of sale
+  sku          String  @db.VarChar(50) // snapshot at time of sale
+  unitPrice    Decimal @db.Decimal(12, 2) @map("unit_price")
+  quantity     Int
+  lineDiscount Decimal @default(0.00) @db.Decimal(12, 2) @map("line_discount")
+  lineTotal    Decimal @db.Decimal(12, 2) @map("line_total")
+
+  sale    Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([saleId])
+  @@index([productId])
+  @@map("sale_items")
+}
+
+model Payment {
+  id            Int           @id @default(autoincrement())
+  saleId        Int           @map("sale_id")
+  method        PaymentMethod
+  amount        Decimal       @db.Decimal(12, 2)
+  referenceCode String?       @db.VarChar(100) @map("reference_code") // e.g. M-Pesa transaction code, for reconciliation
+  paidAt        DateTime      @default(now()) @map("paid_at")
+
+  sale Sale @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  @@index([saleId])
+  @@map("payments")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 04 — Invoicing & Purchasing
+// ─────────────────────────────────────────────────────────────────────────
+
+enum InvoiceStatus {
+  Unpaid
+  PartiallyPaid @map("Partially Paid")
+  Paid
+  Overdue
+  Void
+}
+
+model Invoice {
+  id            Int           @id @default(autoincrement())
+  invoiceNumber String        @unique @db.VarChar(20) @map("invoice_number")
+  saleId        Int?          @map("sale_id") // linked POS sale, if generated from one — NULL for standalone B2B invoices
+  customerId    Int           @map("customer_id")
+  issueDate     DateTime      @db.Date @map("issue_date")
+  dueDate       DateTime?     @db.Date @map("due_date")
+  subtotal      Decimal       @default(0.00) @db.Decimal(12, 2)
+  taxTotal      Decimal       @default(0.00) @db.Decimal(12, 2) @map("tax_total")
+  grandTotal    Decimal       @default(0.00) @db.Decimal(12, 2) @map("grand_total")
+  amountPaid    Decimal       @default(0.00) @db.Decimal(12, 2) @map("amount_paid")
+  status        InvoiceStatus @default(Unpaid)
+  notes         String?       @db.Text
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  sale     Sale?    @relation(fields: [saleId], references: [id], onDelete: SetNull)
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  items InvoiceItem[]
+
+  @@index([customerId])
+  @@index([saleId])
+  @@index([status])
+  @@index([dueDate])
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          Int     @id @default(autoincrement())
+  invoiceId   Int     @map("invoice_id")
+  productId   Int?    @map("product_id") // NULL for non-inventory line items — services, fees
+  description String  @db.VarChar(255)
+  quantity    Int     @default(1)
+  unitPrice   Decimal @db.Decimal(12, 2) @map("unit_price")
+  lineTotal   Decimal @db.Decimal(12, 2) @map("line_total")
+
+  invoice Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([invoiceId])
+  @@index([productId])
+  @@map("invoice_items")
+}
+
+enum PurchaseOrderStatus {
+  Draft
+  Submitted
+  Approved
+  Received
+  PartiallyReceived @map("Partially Received")
+  Cancelled
+}
+
+model PurchaseOrder {
+  id           Int                 @id @default(autoincrement())
+  poNumber     String              @unique @db.VarChar(20) @map("po_number")
+  supplierId   Int                 @map("supplier_id")
+  status       PurchaseOrderStatus @default(Draft)
+  orderDate    DateTime            @db.Date @map("order_date")
+  expectedDate DateTime?           @db.Date @map("expected_date")
+  receivedDate DateTime?           @db.Date @map("received_date")
+  subtotal     Decimal             @default(0.00) @db.Decimal(12, 2)
+  taxTotal     Decimal             @default(0.00) @db.Decimal(12, 2) @map("tax_total")
+  grandTotal   Decimal             @default(0.00) @db.Decimal(12, 2) @map("grand_total")
+  notes        String?             @db.Text
+  createdBy    Int?                @map("created_by")
+  createdAt    DateTime            @default(now()) @map("created_at")
+  updatedAt    DateTime            @updatedAt @map("updated_at")
+
+  supplier Supplier @relation(fields: [supplierId], references: [id])
+  creator  User?    @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+
+  items PurchaseOrderItem[]
+
+  @@index([supplierId])
+  @@index([status])
+  @@index([orderDate])
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderItem {
+  id               Int     @id @default(autoincrement())
+  purchaseOrderId  Int     @map("purchase_order_id")
+  productId        Int     @map("product_id")
+  quantityOrdered  Int     @map("quantity_ordered")
+  quantityReceived Int     @default(0) @map("quantity_received")
+  unitCost         Decimal @db.Decimal(12, 2) @map("unit_cost")
+  lineTotal        Decimal @db.Decimal(12, 2) @map("line_total")
+
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  product       Product       @relation(fields: [productId], references: [id])
+
+  @@index([purchaseOrderId])
+  @@index([productId])
+  @@map("purchase_order_items")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// 05 — Financials, Reporting, Settings & System
+// ─────────────────────────────────────────────────────────────────────────
+
+model ExpenseCategory {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(100)
+  description String?  @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  expenses Expense[]
+
+  @@map("expense_categories")
+}
+
+model Expense {
+  id                Int           @id @default(autoincrement())
+  expenseCategoryId Int           @map("expense_category_id")
+  supplierId        Int?          @map("supplier_id") // optional — set when the expense is a payment to a supplier
+  description       String        @db.VarChar(255)
+  amount            Decimal       @db.Decimal(12, 2)
+  expenseDate       DateTime      @db.Date @map("expense_date")
+  paymentMethod     PaymentMethod @map("payment_method")
+  receiptUrl        String?       @db.VarChar(500) @map("receipt_url")
+  recordedBy        Int           @map("recorded_by")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  category ExpenseCategory @relation(fields: [expenseCategoryId], references: [id])
+  supplier Supplier?       @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  recorder User            @relation(fields: [recordedBy], references: [id])
+
+  @@index([expenseCategoryId])
+  @@index([expenseDate])
+  @@map("expenses")
+}
+
+model BusinessSetting {
+  id                Int      @id @default(autoincrement())
+  businessName      String   @db.VarChar(150) @map("business_name")
+  businessEmail     String?  @db.VarChar(190) @map("business_email")
+  businessPhone     String?  @db.VarChar(30) @map("business_phone")
+  addressLine       String?  @db.VarChar(255) @map("address_line")
+  city              String?  @db.VarChar(100)
+  county            String?  @db.VarChar(100)
+  country           String   @default("Kenya") @db.VarChar(100)
+  taxPin            String?  @db.VarChar(50) @map("tax_pin") // KRA PIN
+  defaultTaxRate    Decimal  @default(16.00) @db.Decimal(5, 2) @map("default_tax_rate")
+  currencyCode      String   @default("KES") @db.VarChar(3) @map("currency_code")
+  logoUrl           String?  @db.VarChar(500) @map("logo_url")
+  receiptFooterText String?  @db.VarChar(255) @map("receipt_footer_text")
+  updatedBy         Int?     @map("updated_by")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  updater User? @relation(fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@map("business_settings")
+}
+
+// Key-value on purpose: this backs Settings > Appearance/Notifications/Backup/
+// System — theme mode, density, primary color, notification toggles, backup
+// schedule. That's a lot of small, frequently-changing, loosely-related
+// toggles; rigid columns here would mean a migration every time the
+// Settings UI grows one.
+model SystemSetting {
+  settingKey   String   @id @db.VarChar(100) @map("setting_key")
+  settingValue Json     @map("setting_value")
+  updatedBy    Int?     @map("updated_by")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  updater User? @relation(fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@map("system_settings")
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  userId     Int?     @map("user_id")
+  action     String   @db.VarChar(100) // e.g. sale.void, product.delete, user.login
+  entityType String   @db.VarChar(50) @map("entity_type") // e.g. sale, product, customer
+  entityId   Int?     @map("entity_id")
+  metadata   Json? // before/after values or other context
+  ipAddress  String?  @db.VarChar(45) @map("ip_address")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model Notification {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  type      String    @db.VarChar(50) // e.g. low_stock, sale_voided, po_received
+  title     String    @db.VarChar(150)
+  message   String    @db.VarChar(500)
+  isRead    Boolean   @default(false) @map("is_read")
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+enum BackupStatus {
+  Running
+  Completed
+  Failed
+}
+
+model Backup {
+  id            Int          @id @default(autoincrement())
+  fileName      String       @db.VarChar(255) @map("file_name")
+  fileSizeBytes Int?         @map("file_size_bytes")
+  storagePath   String       @db.VarChar(500) @map("storage_path") // e.g. S3 key or local path
+  triggeredBy   Int?         @map("triggered_by") // NULL = automated/scheduled backup
+  status        BackupStatus @default(Completed)
+  startedAt     DateTime     @map("started_at")
+  completedAt   DateTime?    @map("completed_at")
+
+  trigger User? @relation(fields: [triggeredBy], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([startedAt])
+  @@map("backups")
+}
+
+enum ReportFormat {
+  Pdf   @map("pdf")
+  Excel @map("excel")
+  Print @map("print")
+}
+
+model ReportExport {
+  id          Int          @id @default(autoincrement())
+  reportType  String       @db.VarChar(50) @map("report_type") // e.g. sales, inventory, customers, overview
+  format      ReportFormat
+  dateFilter  String       @db.VarChar(20) @map("date_filter")
+  rangeStart  DateTime?    @db.Date @map("range_start")
+  rangeEnd    DateTime?    @db.Date @map("range_end")
+  generatedBy Int          @map("generated_by")
+  generatedAt DateTime     @default(now()) @map("generated_at")
+
+  generator User @relation(fields: [generatedBy], references: [id])
+
+  @@index([generatedBy])
+  @@index([generatedAt])
+  @@map("report_exports")
+}
