@@ -30,9 +30,9 @@ export default function LoginForm() {
     setError("");
 
     try {
-      const user = await loginService(email, password);
+      const { user, token } = await loginService(email, password);
 
-      login(user);
+      login(user, token);
       navigate("/");
     } catch (err) {
       setError(err.message);

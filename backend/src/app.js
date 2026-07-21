@@ -10,13 +10,13 @@ const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 app.use(helmet());
 app.use(
   cors({
     origin: env.corsOrigins,
-    // Bearer-token auth (not cookies), so credentials don't need to cross
-    // origins — keeps CORS config simple between the Vercel frontend and
-    // Render backend living on different domains.
+    
     credentials: false,
   })
 );
