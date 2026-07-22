@@ -2,7 +2,10 @@ import api from "../../../config/api";
 import API from "../../../constants/apiEndpoints";
 
 function extractErrorMessage(error, fallback) {
-  return error.response?.data?.message || fallback;
+  if (!error.response) {
+    return "Could not reach the server. Check that the API is running and reachable.";
+  }
+  return error.response.data?.message || fallback;
 }
 
 // Returns { user, token }. Callers are responsible for persisting both
@@ -41,7 +44,7 @@ export async function changePassword(currentPassword, newPassword) {
     await api.post(API.CHANGE_PASSWORD, { currentPassword, newPassword });
   } catch (error) {
     throw new Error(
-      extractErrorMessage(error, "Invalid email or password."),
+      extractErrorMessage(error, "Failed to change password."),
       { cause: error }
     );
   }
