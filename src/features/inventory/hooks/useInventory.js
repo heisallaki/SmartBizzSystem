@@ -4,7 +4,7 @@ import {
   useState,
 } from "react";
 
-import inventoryService from "../../../services/inventory/inventory.service";
+import inventoryService from "../services/inventory.service";
 
 export default function useInventory() {
   const [products, setProducts] = useState([]);

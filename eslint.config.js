@@ -7,8 +7,11 @@ import { defineConfig, globalIgnores } from "eslint/config";
 export default defineConfig([
   globalIgnores(["dist"]),
 
+  // --------------------------
+  // Frontend (React)
+  // --------------------------
   {
-    files: ["**/*.{js,jsx}"],
+    files: ["src/**/*.{js,jsx}"],
 
     extends: [
       js.configs.recommended,
@@ -26,17 +29,31 @@ export default defineConfig([
     },
 
     rules: {
-      // Keep important React Hook rules
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
 
-      // Disable React Compiler optimization rules
       "react-hooks/set-state-in-effect": "off",
       "react-hooks/refs": "off",
       "react-hooks/immutability": "off",
     },
   },
 
+  // --------------------------
+  // Backend (Node.js)
+  // --------------------------
+  {
+    files: ["backend/**/*.js"],
+
+    extends: [js.configs.recommended],
+
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
+
+  // --------------------------
+  // Tests
+  // --------------------------
   {
     files: ["**/*.test.{js,jsx}"],
 

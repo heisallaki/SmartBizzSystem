@@ -1,4 +1,4 @@
-import initialSuppliers from "../../data/suppliersData";
+import initialSuppliers from "../../../data/suppliersData";
 
 let suppliers = [...initialSuppliers];
 

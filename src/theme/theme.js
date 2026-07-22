@@ -2,7 +2,6 @@ import { createTheme } from "@mui/material/styles";
 
 import { colors } from "./colors";
 import typography from "./typography";
-import spacing from "./spacing";
 import buildComponents from "./components";
 
 const PRIMARY_COLORS = {

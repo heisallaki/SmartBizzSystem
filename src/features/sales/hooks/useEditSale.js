@@ -4,8 +4,8 @@ import {
   useState,
 } from "react";
 
-import salesService from "../../../services/sales/sales.service";
-import inventoryService from "../../../services/inventory/inventory.service";
+import salesService from "../services/sales.service";
+import inventoryService from "../../inventory/services/inventory.service";
 import customerService from "../../customers/services/customer.service";
 
 import { DEFAULT_TAX_RATE } from "../../../constants/sales";

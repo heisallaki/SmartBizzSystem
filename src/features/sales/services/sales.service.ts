@@ -1,6 +1,6 @@
-import initialSales from "../../data/salesData";
-import inventoryService from "../inventory/inventory.service";
-import customerService from "../../features/customers/services/customer.service";
+import initialSales from "../../../data/salesData";
+import inventoryService from "../../inventory/services/inventory.service";import customerService from "../../customers/services/customer.service";
+
 
 let sales: any[] = [...initialSales];
 

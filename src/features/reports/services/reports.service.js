@@ -1,7 +1,6 @@
-import salesService from "../../../services/sales/sales.service";
-import inventoryService, {
+import salesService from "../../sales/services/sales.service";import inventoryService, {
   LOW_STOCK_THRESHOLD,
-} from "../../../services/inventory/inventory.service";
+} from "../../inventory/services/inventory.service";
 import customerService from "../../customers/services/customer.service";
 
 import { DEFAULT_REPORT_FILTER } from "../constants/reports.constants";

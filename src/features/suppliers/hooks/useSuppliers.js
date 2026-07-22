@@ -4,7 +4,7 @@ import {
   useState,
 } from "react";
 
-import suppliersService from "../../../services/suppliers/suppliers.service";
+import suppliersService from "../services/suppliers.service";
 
 export default function useSuppliers() {
   const [suppliers, setSuppliers] = useState([]);

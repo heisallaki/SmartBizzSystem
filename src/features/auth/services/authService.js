@@ -12,7 +12,10 @@ export async function login(email, password) {
     const { data } = await api.post(API.LOGIN, { email, password });
     return data.data;
   } catch (error) {
-    throw new Error(extractErrorMessage(error, "Invalid email or password."));
+    throw new Error(
+      extractErrorMessage(error, "Invalid email or password."),
+      { cause: error }
+    );
   }
 }
 
@@ -37,6 +40,9 @@ export async function changePassword(currentPassword, newPassword) {
   try {
     await api.post(API.CHANGE_PASSWORD, { currentPassword, newPassword });
   } catch (error) {
-    throw new Error(extractErrorMessage(error, "Failed to update password."));
+    throw new Error(
+      extractErrorMessage(error, "Invalid email or password."),
+      { cause: error }
+    );
   }
-}
+} 

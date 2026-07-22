@@ -5,7 +5,7 @@ import {
   useState,
 } from "react";
 
-import salesService from "../../../services/sales/sales.service";
+import salesService from "../services/sales.service";
 
 import {
   PAYMENT_METHODS,
