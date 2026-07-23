@@ -1,6 +1,5 @@
-// build order:
-//   Auth -> Inventory -> Suppliers -> Customers -> Sales -> Invoicing/
-//   Purchasing -> Financials/Reports/Settings/System
+// Root router mounted at /api/v1 in app.js. Every feature module gets one
+// line here once it's built.
 
 const { Router } = require("express");
 const healthRoutes = require("./health.routes");
@@ -11,6 +10,8 @@ router.use("/health", healthRoutes);
 router.use("/auth", require("./auth.routes"));
 router.use("/products", require("./product.routes"));
 router.use("/categories", require("./category.routes"));
+router.use("/users", require("./user.routes"));
+router.use("/roles", require("./role.routes"));
 
 // router.use("/suppliers", require("./supplier.routes"));
 // router.use("/customers", require("./customer.routes"));

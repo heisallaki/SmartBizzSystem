@@ -16,7 +16,7 @@ const env = {
   },
   bcryptSaltRounds: Number(process.env.BCRYPT_SALT_ROUNDS) || 10,
   // Comma-separated list in .env, e.g. "http://localhost:5173,https://smartbizzsystem.vercel.app"
-  corsOrigins: (process.env.CORS_ORIGIN || "http://localhost:5173")
+  corsOrigins: (process.env.CORS_ORIGIN || "http://localhost:5173,https://smart-bizz-system.vercel.app")
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean),
