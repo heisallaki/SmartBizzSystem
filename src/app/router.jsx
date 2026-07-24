@@ -11,6 +11,9 @@ import CustomersPage from "../features/customers/CustomersPage";
 import SuppliersPage from "../features/suppliers/SuppliersPage";
 import ReportsPage from "../features/reports/ReportsPage";
 import SettingsPage from "../features/settings/SettingsPage";
+import UsersPage from "../features/users/UsersPage";
+
+import ROLES from "../constants/roles";
 
 const router = createBrowserRouter([
   {
@@ -24,33 +27,20 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
+      { index: true, element: <DashboardPage /> },
+      { path: "inventory", element: <InventoryPage /> },
+      { path: "sales", element: <SalesPage /> },
+      { path: "customers", element: <CustomersPage /> },
+      { path: "suppliers", element: <SuppliersPage /> },
+      { path: "reports", element: <ReportsPage /> },
+      { path: "settings", element: <SettingsPage /> },
       {
-        index: true,
-        element: <DashboardPage />,
-      },
-      {
-        path: "inventory",
-        element: <InventoryPage />,
-      },
-      {
-        path: "sales",
-        element: <SalesPage />,
-      },
-      {
-        path: "customers",
-        element: <CustomersPage />,
-      },
-      {
-        path: "suppliers",
-        element: <SuppliersPage />,
-      },
-      {
-        path: "reports",
-        element: <ReportsPage />,
-      },
-      {
-        path: "settings",
-        element: <SettingsPage />,
+        path: "users",
+        element: (
+          <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+            <UsersPage />
+          </ProtectedRoute>
+        ),
       },
     ],
   },

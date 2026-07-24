@@ -10,8 +10,15 @@ import {
 import { NavLink } from "react-router-dom";
 
 import navigation from "../../constants/navigation";
+import useAuth from "../../features/auth/hooks/useAuth";
 
 export default function Sidebar() {
+  const { user } = useAuth();
+
+  const visibleNavigation = navigation.filter(
+    (item) => !item.roles || item.roles.includes(user?.role)
+  );
+
   return (
     <Box
       sx={{
@@ -25,18 +32,11 @@ export default function Sidebar() {
       }}
     >
       <Box sx={{ p: 3 }}>
-        <Typography
-          variant="h5"
-          fontWeight={700}
-          color="primary"
-        >
+        <Typography variant="h5" fontWeight={700} color="primary">
           SBS
         </Typography>
 
-        <Typography
-          variant="body2"
-          color="text.secondary"
-        >
+        <Typography variant="body2" color="text.secondary">
           SmartBizzSystem
         </Typography>
       </Box>
@@ -44,7 +44,7 @@ export default function Sidebar() {
       <Divider />
 
       <List sx={{ flex: 1, mt: 1, overflowY: "auto" }}>
-        {navigation.map((item) => {
+        {visibleNavigation.map((item) => {
           const Icon = item.icon;
 
           return (

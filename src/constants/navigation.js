@@ -5,6 +5,8 @@ import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import LocalShippingRoundedIcon from "@mui/icons-material/LocalShippingRounded";
 import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import ManageAccountsRoundedIcon from "@mui/icons-material/ManageAccountsRounded";
+import ROLES from "./roles";
 
 const navigation = [
   {
@@ -42,6 +44,15 @@ const navigation = [
     subtitle: "Business insights",
     path: "/reports",
     icon: AssessmentRoundedIcon,
+  },
+  {
+    title: "Users",
+    subtitle: "Staff accounts and roles",
+    path: "/users",
+    icon: ManageAccountsRoundedIcon,
+    // Absent on every other item on purpose — no roles field means
+    // "visible to any authenticated role". Sidebar.jsx treats it that way.
+    roles: [ROLES.ADMIN],
   },
   {
     title: "Settings",
