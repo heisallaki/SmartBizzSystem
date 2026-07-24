@@ -12,29 +12,47 @@ The project is being developed incrementally following professional software dev
 
 ## Planned Features
 
-- Authentication & User Roles
-- Inventory Management
+- Secure Authentication & Role-Based Access Control
+- Dashboard with Business Analytics
+- Inventory & Stock Management
 - Supplier Management
-- Sales Processing
-- Dashboard & Analytics
-- Reports & Export
-- Responsive User Interface
-
+- Customer Management
+- Sales & Order Processing
+- Business Reports & Data Visualization
+- Settings & System Configuration
+- Import & Export (Excel & PDF)
+- Responsive Material UI Interface
+- REST API Backend
+- PostgreSQL Database Integration
 ---
 
 ## Tech Stack
 
-Frontend
-- React
+### Frontend
+- React 19
 - Vite
-- JavaScript
-- CSS
+- JavaScript (ES6+)
+- Material UI (MUI)
+- React Router
+- Axios
+- Recharts
+- jsPDF
+- SheetJS (xlsx)
 
-Backend
-- *(To be decided during development)*
+### Backend
+- Node.js
+- Express.js
+- Prisma ORM
+- JWT Authentication
+- bcrypt
 
-Database
-- *(To be decided during development)*
+### Database
+- PostgreSQL
+- Neon Database
+
+### Deployment
+- Vercel (Frontend)
+- Render (Backend)
 
 ---
 
