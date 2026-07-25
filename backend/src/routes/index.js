@@ -10,6 +10,7 @@ router.use("/health", healthRoutes);
 router.use("/auth", require("./auth.routes"));
 router.use("/products", require("./product.routes"));
 router.use("/categories", require("./category.routes"));
+router.use("/suppliers", require("./supplier.routes"));
 router.use("/users", require("./user.routes"));
 router.use("/roles", require("./role.routes"));
 

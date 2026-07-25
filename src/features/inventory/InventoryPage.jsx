@@ -63,15 +63,10 @@ export default function InventoryPage() {
     closeSnackbar,
   } = useInventory();
 
-  const handleSave = (product) => {
-    if (dialogMode === "edit") {
-      updateProduct(product);
-    } else {
-      addProduct(product);
-    }
-
-    setOpenDialog(false);
-  };
+  const handleSave = (product) =>
+    dialogMode === "edit"
+      ? updateProduct(product)
+      : addProduct(product);
 
   return (
     <Box>

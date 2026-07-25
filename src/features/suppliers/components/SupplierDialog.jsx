@@ -42,6 +42,7 @@ export default function SupplierDialog({
   );
 
   const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (selectedSupplier) {
@@ -128,22 +129,31 @@ export default function SupplierDialog({
     );
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!validateForm()) return;
 
-    onSave({
-      ...form,
-      totalOrders: Number(
-        form.totalOrders
-      ),
-      totalSpend: Number(
-        form.totalSpend
-      ),
-    });
+    setSaving(true);
+    try {
+      await onSave({
+        ...form,
+        totalOrders: Number(
+          form.totalOrders
+        ),
+        totalSpend: Number(
+          form.totalSpend
+        ),
+      });
 
-    setForm(EMPTY_SUPPLIER);
-    setErrors({});
-    onClose();
+      // Only reached on success — a thrown error (already surfaced via
+      // snackbar inside useSuppliers.js) leaves the dialog open with the
+      // form intact instead of silently closing over a real failure.
+      setForm(EMPTY_SUPPLIER);
+      setErrors({});
+      onClose();
+    } catch {
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -271,15 +281,18 @@ export default function SupplierDialog({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>
+        <Button onClick={onClose} disabled={saving}>
           Cancel
         </Button>
 
         <Button
           variant="contained"
           onClick={handleSave}
+          disabled={saving}
         >
-          {mode === "edit"
+          {saving
+            ? "Saving..."
+            : mode === "edit"
             ? "Update"
             : "Save"}
         </Button>

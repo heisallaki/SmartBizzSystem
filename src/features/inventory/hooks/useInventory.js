@@ -72,63 +72,77 @@ export default function useInventory() {
   };
 
   const addProduct = async (product) => {
-  const newProduct =
-    await inventoryService.createProduct(
-      product
-    );
+    try {
+      const newProduct =
+        await inventoryService.createProduct(
+          product
+        );
 
-  setProducts((previousProducts) => [
-    ...previousProducts,
-    newProduct,
-  ]);
+      setProducts((previousProducts) => [
+        ...previousProducts,
+        newProduct,
+      ]);
 
-  showSnackbar(
-    "Product added successfully."
-  );
-};
+      showSnackbar(
+        "Product added successfully."
+      );
+    } catch (error) {
+      showSnackbar(error.message, "error");
+      throw error; // lets ProductDialog know the save failed, so it stays open
+    }
+  };
 
   const updateProduct = async (
-  updatedProduct
-) => {
-  await inventoryService.updateProduct(
     updatedProduct
-  );
+  ) => {
+    try {
+      const saved =
+        await inventoryService.updateProduct(
+          updatedProduct
+        );
 
-  setProducts((previousProducts) =>
-    previousProducts.map((product) =>
-      product.id === updatedProduct.id
-        ? updatedProduct
-        : product
-    )
-  );
+      setProducts((previousProducts) =>
+        previousProducts.map((product) =>
+          product.id === saved.id
+            ? saved
+            : product
+        )
+      );
 
-  showSnackbar(
-    "Product updated successfully."
-  );
-};
+      showSnackbar(
+        "Product updated successfully."
+      );
+    } catch (error) {
+      showSnackbar(error.message, "error");
+      throw error;
+    }
+  };
 
   const deleteProduct = async () => {
-  if (!productToDelete) return;
+    if (!productToDelete) return;
 
-  await inventoryService.deleteProduct(
-    productToDelete.id
-  );
+    try {
+      await inventoryService.deleteProduct(
+        productToDelete.id
+      );
 
-  setProducts((previousProducts) =>
-    previousProducts.filter(
-      (product) =>
-        product.id !== productToDelete.id
-    )
-  );
+      setProducts((previousProducts) =>
+        previousProducts.filter(
+          (product) =>
+            product.id !== productToDelete.id
+        )
+      );
 
-  setDeleteDialogOpen(false);
-
-  setProductToDelete(null);
-
-  showSnackbar(
-    "Product deleted successfully."
-  );
-};
+      showSnackbar(
+        "Product deleted successfully."
+      );
+    } catch (error) {
+      showSnackbar(error.message, "error");
+    } finally {
+      setDeleteDialogOpen(false);
+      setProductToDelete(null);
+    }
+  };
 
   const handleAdd = () => {
     setDialogMode("add");

@@ -88,24 +88,28 @@ model Category {
 }
 
 model Supplier {
-  id             Int             @id @default(autoincrement())
-  name           String          @db.VarChar(150)
-  contactPerson  String?         @map("contact_person") @db.VarChar(150)
-  email          String?         @db.VarChar(190)
-  phone          String?         @db.VarChar(30)
-  addressLine    String?         @map("address_line") @db.VarChar(255)
-  city           String?         @db.VarChar(100)
-  county         String?         @db.VarChar(100)
-  country        String          @default("Kenya") @db.VarChar(100)
-  taxNumber      String?         @map("tax_number") @db.VarChar(50)
-  status         SupplierStatus  @default(Active)
-  notes          String?
-  createdAt      DateTime        @default(now()) @map("created_at")
-  updatedAt      DateTime        @updatedAt @map("updated_at")
-  deletedAt      DateTime?       @map("deleted_at")
-  expenses       Expense[]
+  id            Int            @id @default(autoincrement())
+  name          String         @db.VarChar(150)
+  contactPerson String?        @db.VarChar(150) @map("contact_person")
+  email         String?        @db.VarChar(190)
+  phone         String?        @db.VarChar(30)
+  category      String?        @db.VarChar(100)
+  addressLine   String?        @db.VarChar(255) @map("address_line")
+  city          String?        @db.VarChar(100)
+  county        String?        @db.VarChar(100)
+  country       String         @default("Kenya") @db.VarChar(100)
+  taxNumber     String?        @db.VarChar(50) @map("tax_number")
+  status        SupplierStatus @default(Active)
+  totalOrders   Int            @default(0) @map("total_orders")
+  totalSpend    Decimal        @default(0.00) @db.Decimal(12, 2) @map("total_spend")
+  notes         String?        @db.Text
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  deletedAt     DateTime?      @map("deleted_at")
+
   products       Product[]
   purchaseOrders PurchaseOrder[]
+  expenses       Expense[]
 
   @@index([status])
   @@map("suppliers")
@@ -472,6 +476,7 @@ enum UserStatus {
 
 enum SupplierStatus {
   Active
+  OnHold @map("On Hold")
   Inactive
 }
 

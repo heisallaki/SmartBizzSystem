@@ -27,6 +27,7 @@ export default function ProductDialog({
 }) {
   const [form, setForm] = useState(EMPTY_PRODUCT);
   const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (selectedProduct) {
@@ -85,18 +86,27 @@ export default function ProductDialog({
     return Object.keys(validationErrors).length === 0;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!validateForm()) return;
 
-    onSave({
-      ...form,
-      stock: Number(form.stock),
-      price: Number(form.price),
-    });
+    setSaving(true);
+    try {
+      await onSave({
+        ...form,
+        stock: Number(form.stock),
+        price: Number(form.price),
+      });
 
-    setForm(EMPTY_PRODUCT);
-    setErrors({});
-    onClose();
+      // Only reached on success — a thrown error (already surfaced via
+      // snackbar inside useInventory.js) leaves the dialog open with the
+      // form intact instead of silently closing over a real failure.
+      setForm(EMPTY_PRODUCT);
+      setErrors({});
+      onClose();
+    } catch {
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -169,15 +179,18 @@ export default function ProductDialog({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>
+        <Button onClick={onClose} disabled={saving}>
           Cancel
         </Button>
 
         <Button
           variant="contained"
           onClick={handleSave}
+          disabled={saving}
         >
-          {mode === "edit"
+          {saving
+            ? "Saving..."
+            : mode === "edit"
             ? "Update"
             : "Save"}
         </Button>

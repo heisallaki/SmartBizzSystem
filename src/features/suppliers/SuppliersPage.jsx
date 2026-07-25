@@ -63,15 +63,14 @@ export default function SuppliersPage() {
     closeSnackbar,
   } = useSuppliers();
 
-  const handleSave = (supplier) => {
-    if (dialogMode === "edit") {
-      updateSupplier(supplier);
-    } else {
-      addSupplier(supplier);
-    }
-
-    setOpenDialog(false);
-  };
+  // SupplierDialog awaits this and only closes itself on success — a thrown
+  // error (already surfaced via snackbar inside useSuppliers.js) leaves the
+  // dialog open so the fields can be corrected, instead of closing over a
+  // real server rejection. 
+  const handleSave = (supplier) =>
+    dialogMode === "edit"
+      ? updateSupplier(supplier)
+      : addSupplier(supplier);
 
   return (
     <Box>

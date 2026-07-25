@@ -72,62 +72,79 @@ export default function useSuppliers() {
   };
 
   const addSupplier = async (supplier) => {
-    const newSupplier =
-      await suppliersService.createSupplier(
-        supplier
+    try {
+      const newSupplier =
+        await suppliersService.createSupplier(
+          supplier
+        );
+
+      setSuppliers((previousSuppliers) => [
+        ...previousSuppliers,
+        newSupplier,
+      ]);
+
+      showSnackbar(
+        "Supplier added successfully."
       );
-
-    setSuppliers((previousSuppliers) => [
-      ...previousSuppliers,
-      newSupplier,
-    ]);
-
-    showSnackbar(
-      "Supplier added successfully."
-    );
+    } catch (error) {
+      showSnackbar(error.message, "error");
+      throw error; // lets SupplierDialog know the save failed, so it stays open
+    }
   };
 
   const updateSupplier = async (
     updatedSupplier
   ) => {
-    await suppliersService.updateSupplier(
-      updatedSupplier
-    );
+    try {
+      // Uses the server's response, not the raw form data — it reflects
+      // the authoritative saved values rather than echoing back whatever
+      // was locally typed.
+      const saved =
+        await suppliersService.updateSupplier(
+          updatedSupplier
+        );
 
-    setSuppliers((previousSuppliers) =>
-      previousSuppliers.map((supplier) =>
-        supplier.id === updatedSupplier.id
-          ? updatedSupplier
-          : supplier
-      )
-    );
+      setSuppliers((previousSuppliers) =>
+        previousSuppliers.map((supplier) =>
+          supplier.id === saved.id
+            ? saved
+            : supplier
+        )
+      );
 
-    showSnackbar(
-      "Supplier updated successfully."
-    );
+      showSnackbar(
+        "Supplier updated successfully."
+      );
+    } catch (error) {
+      showSnackbar(error.message, "error");
+      throw error;
+    }
   };
 
   const deleteSupplier = async () => {
     if (!supplierToDelete) return;
 
-    await suppliersService.deleteSupplier(
-      supplierToDelete.id
-    );
+    try {
+      await suppliersService.deleteSupplier(
+        supplierToDelete.id
+      );
 
-    setSuppliers((previousSuppliers) =>
-      previousSuppliers.filter(
-        (supplier) =>
-          supplier.id !== supplierToDelete.id
-      )
-    );
+      setSuppliers((previousSuppliers) =>
+        previousSuppliers.filter(
+          (supplier) =>
+            supplier.id !== supplierToDelete.id
+        )
+      );
 
-    setDeleteDialogOpen(false);
-
-    setSupplierToDelete(null);
-
-    showSnackbar(
-      "Supplier deleted successfully."
-    );
+      showSnackbar(
+        "Supplier deleted successfully."
+      );
+    } catch (error) {
+      showSnackbar(error.message, "error");
+    } finally {
+      setDeleteDialogOpen(false);
+      setSupplierToDelete(null);
+    }
   };
 
   const handleAdd = () => {
