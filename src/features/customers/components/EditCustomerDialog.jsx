@@ -84,10 +84,15 @@ export default function EditCustomerDialog({
       return;
     }
 
-    await onSave(
-      formData.id,
-      formData
-    );
+    try {
+      await onSave(
+        formData.id,
+        formData
+      );
+    } catch {
+      // already surfaced via snackbar in CustomersPage — dialog stays open
+      // with the edited fields intact so they can be corrected and resaved
+    }
   };
 
   const handleClose = () => {

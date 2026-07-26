@@ -100,11 +100,12 @@ export default function CustomersPage() {
       showSnackbar(
         "Customer created successfully."
       );
-    } catch {
+    } catch (error) {
       showSnackbar(
-        "Failed to create customer.",
+        error.message || "Failed to create customer.",
         "error"
       );
+      throw error; // lets AddCustomerDialog know the save failed, so it keeps the typed-in fields
     }
   };
 
@@ -120,11 +121,12 @@ export default function CustomersPage() {
       showSnackbar(
         "Customer updated successfully."
       );
-    } catch {
+    } catch (error) {
       showSnackbar(
-        "Failed to update customer.",
+        error.message || "Failed to update customer.",
         "error"
       );
+      throw error;
     }
   };
 
@@ -140,11 +142,12 @@ export default function CustomersPage() {
         );
 
         setSelectedCustomer(null);
-      } catch {
+      } catch (error) {
         showSnackbar(
-          "Failed to delete customer.",
+          error.message || "Failed to delete customer.",
           "error"
         );
+        throw error;
       }
     };
 

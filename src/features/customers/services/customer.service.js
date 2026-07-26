@@ -1,250 +1,116 @@
-import customersData from "../../../data/customersData";
+import api from "../../../config/api";
 
-let customers = [...customersData];
+function extractErrorMessage(error, fallback) {
+  if (!error.response) {
+    return "Could not reach the server. Check that the API is running and reachable.";
+  }
+  return error.response.data?.message || fallback;
+}
 
-const simulateDelay = (ms = 150) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+// Backend's public identifier for a customer is its customerCode (e.g.
+// "CUS-1001") — the numeric database id is an internal detail this bridge
+// never surfaces, matching how every other file in this feature already
+// treats `customer.id` as that human-readable code.
+function mapCustomer(customer) {
+  if (!customer) return customer;
 
-const generateId = () => {
-  const ids = customers
-    .map((c) => Number(c.id.replace("CUS-", "")))
-    .filter(Number.isFinite);
+  return {
+    id: customer.customerCode,
+    firstName: customer.firstName,
+    lastName: customer.lastName,
+    fullName: `${customer.firstName} ${customer.lastName}`,
+    email: customer.email,
+    phone: customer.phone,
+    company: customer.company || "",
+    taxNumber: customer.taxNumber || "",
+    address: {
+      street: customer.addressLine || "",
+      city: customer.city || "",
+      county: customer.county || "",
+      postalCode: customer.postalCode || "",
+      country: customer.country || "Kenya",
+    },
+    status: customer.status,
+    notes: customer.notes || "",
+    createdAt: customer.createdAt,
+    updatedAt: customer.updatedAt,
+    totalOrders: customer.totalOrders,
+    // Prisma Decimal fields serialize as strings over JSON — CustomerStats/
+    // CustomerDetailsDrawer format these as currency and do arithmetic on
+    // them, so they need to be real numbers.
+    totalSpent: Number(customer.totalSpent),
+    outstandingBalance: Number(customer.outstandingBalance),
+    lastPurchase: customer.lastPurchaseAt || null,
+    purchaseHistory: (customer.purchaseHistory || []).map((purchase) => ({
+      id: purchase.id,
+      invoice: purchase.invoice,
+      date: purchase.date,
+      total: Number(purchase.total),
+    })),
+  };
+}
 
-  const next = ids.length ? Math.max(...ids) + 1 : 1001;
-
-  return `CUS-${String(next).padStart(4, "0")}`;
-};
-
-const sortCustomers = (list) =>
-  [...list].sort((a, b) => a.fullName.localeCompare(b.fullName));
+// Reverses mapCustomer — flattens the nested address back into the
+// backend's flat columns, and drops fields the backend doesn't accept on
+// write (totalOrders/totalSpent/outstandingBalance are system-managed).
+function toApiPayload(customer) {
+  return {
+    firstName: customer.firstName,
+    lastName: customer.lastName,
+    email: customer.email,
+    phone: customer.phone,
+    company: customer.company || undefined,
+    taxNumber: customer.taxNumber || undefined,
+    addressLine: customer.address?.street,
+    city: customer.address?.city,
+    county: customer.address?.county,
+    postalCode: customer.address?.postalCode || undefined,
+    country: customer.address?.country,
+    status: customer.status,
+    notes: customer.notes || undefined,
+  };
+}
 
 const customerService = {
   async getAll() {
-    await simulateDelay();
-    return sortCustomers(customers);
-  },
-
-  async getById(id) {
-    await simulateDelay();
-
-    return customers.find((customer) => customer.id === id) || null;
+    const { data } = await api.get("/customers", { params: { limit: 500 } });
+    return data.data.map(mapCustomer);
   },
 
   async create(customer) {
-    await simulateDelay();
-
-    const now = new Date().toISOString();
-
-    const newCustomer = {
-      id: generateId(),
-      firstName: customer.firstName.trim(),
-      lastName: customer.lastName.trim(),
-      fullName: `${customer.firstName.trim()} ${customer.lastName.trim()}`,
-      email: customer.email.trim(),
-      phone: customer.phone.trim(),
-      company: customer.company?.trim() || "",
-      taxNumber: customer.taxNumber?.trim() || "",
-      address: {
-        street: customer.address?.street || "",
-        city: customer.address?.city || "",
-        county: customer.address?.county || "",
-        postalCode: customer.address?.postalCode || "",
-        country: customer.address?.country || "Kenya",
-      },
-      status: customer.status || "Active",
-      notes: customer.notes || "",
-      createdAt: now,
-      updatedAt: now,
-      totalOrders: 0,
-      totalSpent: 0,
-      outstandingBalance: 0,
-      lastPurchase: null,
-      purchaseHistory: [],
-    };
-
-    customers = [...customers, newCustomer];
-
-    return newCustomer;
+    try {
+      const { data } = await api.post("/customers", toApiPayload(customer));
+      return mapCustomer(data.data);
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, "Failed to create customer."));
+    }
   },
 
   async update(id, updates) {
-    await simulateDelay();
-
-    let updatedCustomer = null;
-
-    customers = customers.map((customer) => {
-      if (customer.id !== id) return customer;
-
-      updatedCustomer = {
-        ...customer,
-        ...updates,
-        fullName: `${updates.firstName ?? customer.firstName} ${
-          updates.lastName ?? customer.lastName
-        }`,
-        address: {
-          ...customer.address,
-          ...(updates.address || {}),
-        },
-        updatedAt: new Date().toISOString(),
-      };
-
-      return updatedCustomer;
-    });
-
-    return updatedCustomer;
+    try {
+      const { data } = await api.patch(`/customers/${id}`, toApiPayload(updates));
+      return mapCustomer(data.data);
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, "Failed to update customer."));
+    }
   },
 
   async remove(id) {
-    await simulateDelay();
-
-    customers = customers.filter((customer) => customer.id !== id);
-
-    return true;
-  },
-
-  /**
-   * Called by the Sales feature when a sale is completed for a registered
-   * (non walk-in) customer. Updates order totals and appends a
-   * purchaseHistory entry shaped for CustomerDetailsDrawer:
-   * { id, invoice, date, total }.
-   */
-  async recordPurchase(customerId, sale) {
-    await simulateDelay();
-
-    let updatedCustomer = null;
-
-    customers = customers.map((customer) => {
-      if (customer.id !== customerId) return customer;
-
-      const purchaseEntry = {
-        id: sale.id,
-        invoice: sale.invoice,
-        date: sale.date,
-        total: sale.total,
-      };
-
-      updatedCustomer = {
-        ...customer,
-        totalOrders: customer.totalOrders + 1,
-        totalSpent: customer.totalSpent + sale.total,
-        lastPurchase: sale.date,
-        purchaseHistory: [purchaseEntry, ...customer.purchaseHistory],
-        updatedAt: new Date().toISOString(),
-      };
-
-      return updatedCustomer;
-    });
-
-    return updatedCustomer;
-  },
-
-  /**
-   * Reverses recordPurchase for a voided/deleted/edited sale — removes the
-   * matching purchaseHistory entry and rolls back totals. No-ops if the
-   * customer has no matching entry (e.g. walk-in sales, or seed customers
-   * whose lifetime totals predate purchaseHistory tracking).
-   */
-  async reversePurchase(customerId, saleId) {
-    await simulateDelay();
-
-    let updatedCustomer = null;
-
-    customers = customers.map((customer) => {
-      if (customer.id !== customerId) return customer;
-
-      const entry = customer.purchaseHistory.find(
-        (purchase) => purchase.id === saleId
-      );
-
-      if (!entry) return customer;
-
-      const remainingHistory = customer.purchaseHistory.filter(
-        (purchase) => purchase.id !== saleId
-      );
-
-      updatedCustomer = {
-        ...customer,
-        totalOrders: Math.max(0, customer.totalOrders - 1),
-        totalSpent: Math.max(0, customer.totalSpent - entry.total),
-        lastPurchase: remainingHistory[0]?.date ?? null,
-        purchaseHistory: remainingHistory,
-        updatedAt: new Date().toISOString(),
-      };
-
-      return updatedCustomer;
-    });
-
-    return updatedCustomer;
-  },
-
-  async search(query) {
-    await simulateDelay();
-
-    if (!query) return sortCustomers(customers);
-
-    const value = query.toLowerCase();
-
-    return customers.filter((customer) =>
-      [
-        customer.fullName,
-        customer.email,
-        customer.phone,
-        customer.company,
-        customer.id,
-      ]
-        .filter(Boolean)
-        .some((field) => field.toLowerCase().includes(value))
-    );
-  },
-
-  async filter(filters = {}) {
-    await simulateDelay();
-
-    let results = [...customers];
-
-    if (filters.status && filters.status !== "All") {
-      results = results.filter(
-        (customer) => customer.status === filters.status
-      );
+    try {
+      await api.delete(`/customers/${id}`);
+      return true;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, "Failed to delete customer."));
     }
-
-    if (filters.city) {
-      results = results.filter(
-        (customer) =>
-          customer.address.city.toLowerCase() ===
-          filters.city.toLowerCase()
-      );
-    }
-
-    return sortCustomers(results);
   },
 
   async getStatistics() {
-    await simulateDelay();
-
-    const active = customers.filter(
-      (customer) => customer.status === "Active"
-    ).length;
-
-    const inactive = customers.length - active;
-
-    const outstandingBalance = customers.reduce(
-      (sum, customer) => sum + customer.outstandingBalance,
-      0
-    );
-
-    const totalRevenue = customers.reduce(
-      (sum, customer) => sum + customer.totalSpent,
-      0
-    );
-
-    return {
-      totalCustomers: customers.length,
-      activeCustomers: active,
-      inactiveCustomers: inactive,
-      outstandingBalance,
-      totalRevenue,
-    };
+    try {
+      const { data } = await api.get("/customers/statistics");
+      return data.data;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error, "Failed to load customer statistics."));
+    }
   },
 };
 

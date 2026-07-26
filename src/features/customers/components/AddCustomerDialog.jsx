@@ -76,10 +76,16 @@ export default function AddCustomerDialog({
       return;
     }
 
-    await onSave(customer);
+    try {
+      await onSave(customer);
 
-    setCustomer(emptyCustomer());
-    setErrors({});
+      // Only reached on success — a thrown error (already surfaced via
+      // snackbar in CustomersPage) leaves the typed-in fields alone instead
+      // of wiping them out from under a failed save.
+      setCustomer(emptyCustomer());
+      setErrors({});
+    } catch {
+    }
   };
 
   const handleClose = () => {
