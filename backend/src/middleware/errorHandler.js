@@ -53,9 +53,7 @@ function errorHandler(err, req, res, next) { // eslint-disable-line no-unused-va
     message = "Authentication token has expired.";
   }
 
-  if (statusCode >= 500) {
-    // Unexpected errors get logged with the full stack — operational
-    // ApiErrors (4xx) are expected control flow and don't need the noise.
+   if (statusCode >= 500 || err instanceof Prisma.PrismaClientKnownRequestError) {
     console.error(err);
   }
 

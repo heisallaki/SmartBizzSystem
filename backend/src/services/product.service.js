@@ -173,7 +173,7 @@ async function adjustStock({ productId, quantityChange, movementType, notes, act
 
 // Bridge for the frontend's decrementStock()/incrementStock() — restricted
 // to Sale/Return/VoidReversal at the route/validator level, which is what
-// makes it safe to leave open to any authenticated role (see product.routes.js).
+// makes it safe to leave open to any authenticated role.
 async function batchAdjustStock({ items, movementType, actorId }) {
   return prisma.$transaction(async (tx) => {
     const results = [];
@@ -223,10 +223,10 @@ async function batchAdjustStock({ items, movementType, actorId }) {
   });
 }
 
-// Called directly by Sales' checkout service once that module exists — not
-// exposed as its own HTTP endpoint. Accepts an optional transaction client
-// so every line item in a sale can decrement stock atomically alongside
-// creating the Sale/SaleItem rows.
+// Called directly by Sales' checkout service — not exposed as its own HTTP
+// endpoint. Accepts an optional transaction client so every line item in a
+// sale can decrement stock atomically alongside creating the Sale/SaleItem
+// rows.
 async function decrementStockForSale({ productId, quantity, saleId, actorId, tx }) {
   const db = tx || prisma;
 
@@ -249,6 +249,35 @@ async function decrementStockForSale({ productId, quantity, saleId, actorId, tx 
       productId,
       movementType: "Sale",
       quantityChange: -quantity,
+      stockAfter: newStock,
+      referenceType: "sale",
+      referenceId: saleId,
+      createdBy: actorId,
+    },
+  });
+
+  return newStock;
+}
+
+// Reverses decrementStockForSale — called by Sales' void/edit/delete flows
+// when undoing a previously-Completed sale's effect on stock. Same shape
+// as decrementStockForSale, incrementing instead of decrementing.
+async function reverseStockForSale({ productId, quantity, saleId, actorId, tx }) {
+  const db = tx || prisma;
+
+  const product = await db.product.findUnique({ where: { id: productId } });
+  if (!product) throw ApiError.notFound(`Product ${productId} not found.`);
+
+  const newStock = product.stock + quantity;
+  const status = computeStatus(newStock, product.lowStockThreshold);
+
+  await db.product.update({ where: { id: productId }, data: { stock: newStock, status } });
+
+  await db.stockMovement.create({
+    data: {
+      productId,
+      movementType: "VoidReversal",
+      quantityChange: quantity,
       stockAfter: newStock,
       referenceType: "sale",
       referenceId: saleId,
@@ -285,5 +314,6 @@ module.exports = {
   adjustStock,
   batchAdjustStock,
   decrementStockForSale,
+  reverseStockForSale,
   listStockMovements,
 };
