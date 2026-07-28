@@ -247,14 +247,18 @@ model SaleItem {
 
 model Payment {
   id            Int           @id @default(autoincrement())
-  saleId        Int           @map("sale_id")
+  saleId        Int?          @map("sale_id")
+  invoiceId     Int?          @map("invoice_id")
   method        PaymentMethod
   amount        Decimal       @db.Decimal(12, 2)
-  referenceCode String?       @map("reference_code") @db.VarChar(100)
+  referenceCode String?       @db.VarChar(100) @map("reference_code")
   paidAt        DateTime      @default(now()) @map("paid_at")
-  sale          Sale          @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  sale    Sale?    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  invoice Invoice? @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
   @@index([saleId])
+  @@index([invoiceId])
   @@map("payments")
 }
 
@@ -273,7 +277,8 @@ model Invoice {
   notes         String?
   createdAt     DateTime      @default(now()) @map("created_at")
   updatedAt     DateTime      @updatedAt @map("updated_at")
-  items         InvoiceItem[]
+  items    InvoiceItem[]
+  payments Payment[]
   customer      Customer      @relation(fields: [customerId], references: [id])
   sale          Sale?         @relation(fields: [saleId], references: [id])
 

@@ -224,9 +224,7 @@ async function batchAdjustStock({ items, movementType, actorId }) {
 }
 
 // Called directly by Sales' checkout service — not exposed as its own HTTP
-// endpoint. Accepts an optional transaction client so every line item in a
-// sale can decrement stock atomically alongside creating the Sale/SaleItem
-// rows.
+// endpoint.
 async function decrementStockForSale({ productId, quantity, saleId, actorId, tx }) {
   const db = tx || prisma;
 
@@ -259,9 +257,7 @@ async function decrementStockForSale({ productId, quantity, saleId, actorId, tx 
   return newStock;
 }
 
-// Reverses decrementStockForSale — called by Sales' void/edit/delete flows
-// when undoing a previously-Completed sale's effect on stock. Same shape
-// as decrementStockForSale, incrementing instead of decrementing.
+// Reverses decrementStockForSale — called by Sales' void/edit/delete flows.
 async function reverseStockForSale({ productId, quantity, saleId, actorId, tx }) {
   const db = tx || prisma;
 
@@ -281,6 +277,36 @@ async function reverseStockForSale({ productId, quantity, saleId, actorId, tx })
       stockAfter: newStock,
       referenceType: "sale",
       referenceId: saleId,
+      createdBy: actorId,
+    },
+  });
+
+  return newStock;
+}
+
+// Called directly by Purchase Orders' receive flow — not its own HTTP
+// endpoint. Increases stock as goods physically arrive, accepting an
+// optional transaction client so it runs atomically alongside updating the
+// PurchaseOrderItem's quantityReceived.
+async function increaseStockForPurchaseOrder({ productId, quantity, purchaseOrderId, actorId, tx }) {
+  const db = tx || prisma;
+
+  const product = await db.product.findUnique({ where: { id: productId } });
+  if (!product) throw ApiError.notFound(`Product ${productId} not found.`);
+
+  const newStock = product.stock + quantity;
+  const status = computeStatus(newStock, product.lowStockThreshold);
+
+  await db.product.update({ where: { id: productId }, data: { stock: newStock, status } });
+
+  await db.stockMovement.create({
+    data: {
+      productId,
+      movementType: "PurchaseOrder",
+      quantityChange: quantity,
+      stockAfter: newStock,
+      referenceType: "purchase_order",
+      referenceId: purchaseOrderId,
       createdBy: actorId,
     },
   });
@@ -315,5 +341,6 @@ module.exports = {
   batchAdjustStock,
   decrementStockForSale,
   reverseStockForSale,
+  increaseStockForPurchaseOrder,
   listStockMovements,
 };
