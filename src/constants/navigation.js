@@ -3,9 +3,12 @@ import Inventory2RoundedIcon from "@mui/icons-material/Inventory2Rounded";
 import PointOfSaleRoundedIcon from "@mui/icons-material/PointOfSaleRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import LocalShippingRoundedIcon from "@mui/icons-material/LocalShippingRounded";
+import ReceiptLongRoundedIcon from "@mui/icons-material/ReceiptLongRounded";
+import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
 import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
-import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import ManageAccountsRoundedIcon from "@mui/icons-material/ManageAccountsRounded";
+import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+
 import ROLES from "./roles";
 
 const navigation = [
@@ -34,10 +37,24 @@ const navigation = [
     icon: PeopleRoundedIcon,
   },
   {
+    title: "Invoices",
+    subtitle: "Bill customers and track payments",
+    path: "/invoices",
+    icon: DescriptionRoundedIcon,
+  },
+  {
     title: "Suppliers",
     subtitle: "Supplier management",
     path: "/suppliers",
     icon: LocalShippingRoundedIcon,
+    roles: [ROLES.ADMIN, ROLES.MANAGER],
+  },
+  {
+    title: "Purchase Orders",
+    subtitle: "Order stock from suppliers",
+    path: "/purchase-orders",
+    icon: ReceiptLongRoundedIcon,
+    roles: [ROLES.ADMIN, ROLES.MANAGER],
   },
   {
     title: "Reports",
@@ -50,8 +67,6 @@ const navigation = [
     subtitle: "Staff accounts and roles",
     path: "/users",
     icon: ManageAccountsRoundedIcon,
-    // Absent on every other item on purpose — no roles field means
-    // "visible to any authenticated role". Sidebar.jsx treats it that way.
     roles: [ROLES.ADMIN],
   },
   {

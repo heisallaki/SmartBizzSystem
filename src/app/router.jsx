@@ -8,7 +8,9 @@ import DashboardPage from "../features/dashboard/DashboardPage";
 import InventoryPage from "../features/inventory/InventoryPage";
 import SalesPage from "../features/sales/SalesPage";
 import CustomersPage from "../features/customers/CustomersPage";
+import InvoicesPage from "../features/invoices/InvoicesPage";
 import SuppliersPage from "../features/suppliers/SuppliersPage";
+import PurchaseOrdersPage from "../features/purchase-orders/PurchaseOrdersPage";
 import ReportsPage from "../features/reports/ReportsPage";
 import SettingsPage from "../features/settings/SettingsPage";
 import UsersPage from "../features/users/UsersPage";
@@ -31,9 +33,25 @@ const router = createBrowserRouter([
       { path: "inventory", element: <InventoryPage /> },
       { path: "sales", element: <SalesPage /> },
       { path: "customers", element: <CustomersPage /> },
-      { path: "suppliers", element: <SuppliersPage /> },
+      { path: "invoices", element: <InvoicesPage /> },
       { path: "reports", element: <ReportsPage /> },
       { path: "settings", element: <SettingsPage /> },
+      {
+        path: "suppliers",
+        element: (
+          <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.MANAGER]}>
+            <SuppliersPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "purchase-orders",
+        element: (
+          <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.MANAGER]}>
+            <PurchaseOrdersPage />
+          </ProtectedRoute>
+        ),
+      },
       {
         path: "users",
         element: (
