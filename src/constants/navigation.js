@@ -8,6 +8,7 @@ import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
 import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
 import ManageAccountsRoundedIcon from "@mui/icons-material/ManageAccountsRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import PaidRoundedIcon from "@mui/icons-material/PaidRounded";
 
 import ROLES from "./roles";
 
@@ -54,6 +55,13 @@ const navigation = [
     subtitle: "Order stock from suppliers",
     path: "/purchase-orders",
     icon: ReceiptLongRoundedIcon,
+    roles: [ROLES.ADMIN, ROLES.MANAGER],
+  },
+  {
+    title: "Expenses",
+    subtitle: "Track business expenses",
+    path: "/expenses",
+    icon: PaidRoundedIcon,
     roles: [ROLES.ADMIN, ROLES.MANAGER],
   },
   {

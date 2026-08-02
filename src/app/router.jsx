@@ -11,6 +11,7 @@ import CustomersPage from "../features/customers/CustomersPage";
 import InvoicesPage from "../features/invoices/InvoicesPage";
 import SuppliersPage from "../features/suppliers/SuppliersPage";
 import PurchaseOrdersPage from "../features/purchase-orders/PurchaseOrdersPage";
+import ExpensesPage from "../features/expenses/ExpensesPage";
 import ReportsPage from "../features/reports/ReportsPage";
 import SettingsPage from "../features/settings/SettingsPage";
 import UsersPage from "../features/users/UsersPage";
@@ -49,6 +50,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.MANAGER]}>
             <PurchaseOrdersPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "expenses",
+        element: (
+          <ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.MANAGER]}>
+            <ExpensesPage />
           </ProtectedRoute>
         ),
       },

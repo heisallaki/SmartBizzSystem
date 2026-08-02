@@ -15,5 +15,6 @@ router.use("/invoices", require("./invoice.routes"));
 router.use("/users", require("./user.routes"));
 router.use("/roles", require("./role.routes"));
 router.use("/reports", require("./report.routes"));
+router.use("/expenses", require("./expense.routes"));
 
 module.exports = router;
