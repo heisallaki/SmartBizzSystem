@@ -7,6 +7,8 @@ import settingsData, {
   securitySettings,
 } from "../data/settingsData";
 
+import businessSettingsService from "./businessSettings.service";
+
 const NETWORK_DELAY = 500;
 
 const delay = (ms = NETWORK_DELAY) =>
@@ -23,9 +25,17 @@ export async function getSettings() {
 }
 
 export async function getGeneralSettings() {
-  await delay();
+  const real = await businessSettingsService.getBusinessSettings();
 
-  return clone(generalSettings);
+  return {
+    ...clone(generalSettings),
+    businessName: real.businessName,
+    businessEmail: real.businessEmail,
+    businessPhone: real.businessPhone,
+    businessAddress: real.addressLine,
+    businessLogo: real.logoUrl,
+    currency: real.currencyCode,
+  };
 }
 
 export async function getAppearanceSettings() {
@@ -47,9 +57,13 @@ export async function getNotificationSettings() {
 }
 
 export async function getBusinessSettings() {
-  await delay();
+  const real = await businessSettingsService.getBusinessSettings();
 
-  return clone(businessSettings);
+  return {
+    ...clone(businessSettings),
+    taxRate: real.defaultTaxRate,
+    receiptFooter: real.receiptFooterText,
+  };
 }
 
 export async function getBackupSettings() {
@@ -59,9 +73,24 @@ export async function getBackupSettings() {
 }
 
 export async function saveGeneralSettings(data) {
-  await delay();
+  const saved = await businessSettingsService.updateBusinessSettings({
+    businessName: data.businessName,
+    businessEmail: data.businessEmail,
+    businessPhone: data.businessPhone,
+    addressLine: data.businessAddress,
+    logoUrl: data.businessLogo,
+    currencyCode: data.currency,
+  });
 
-  return clone(data);
+  return {
+    ...clone(data),
+    businessName: saved.businessName,
+    businessEmail: saved.businessEmail,
+    businessPhone: saved.businessPhone,
+    businessAddress: saved.addressLine,
+    businessLogo: saved.logoUrl,
+    currency: saved.currencyCode,
+  };
 }
 
 export async function saveAppearanceSettings(data) {
@@ -83,9 +112,16 @@ export async function saveNotificationSettings(data) {
 }
 
 export async function saveBusinessSettings(data) {
-  await delay();
+  const saved = await businessSettingsService.updateBusinessSettings({
+    defaultTaxRate: data.taxRate,
+    receiptFooterText: data.receiptFooter,
+  });
 
-  return clone(data);
+  return {
+    ...clone(data),
+    taxRate: saved.defaultTaxRate,
+    receiptFooter: saved.receiptFooterText,
+  };
 }
 
 export async function saveBackupSettings(data) {

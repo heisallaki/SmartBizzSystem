@@ -1,8 +1,6 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import {
-  dialogState as initialDialogs,
-} from "../data/settingsData";
+import { dialogState as initialDialogs } from "../data/settingsData";
 
 import * as settingsService from "../services/settings.service";
 
@@ -21,18 +19,15 @@ export default function useSettings() {
   const business = useBusinessSettings();
   const backup = useBackupSettings();
 
-  const [loading] = useState(false);
+  const loading = general.loading || business.loading;
+
   const [saving, setSaving] = useState(false);
 
-  const [dialogs, setDialogs] = useState(() =>
-    structuredClone(initialDialogs)
-  );
+  const [dialogs, setDialogs] = useState(() => structuredClone(initialDialogs));
 
-  const [activeSection, setActiveSection] =
-    useState("general");
+  const [activeSection, setActiveSection] = useState("general");
 
-  const [selectedFile, setSelectedFile] =
-    useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -59,13 +54,15 @@ export default function useSettings() {
     ]
   );
 
-  const snapshotRef = useRef(
-    JSON.stringify(settings)
-  );
+  const snapshotRef = useRef(null);
 
-  const dirty =
-    JSON.stringify(settings) !==
-    snapshotRef.current;
+  useEffect(() => {
+    if (!loading) {
+      snapshotRef.current = JSON.stringify(settings);
+    }
+  }, [loading]);
+
+  const dirty = snapshotRef.current !== null && JSON.stringify(settings) !== snapshotRef.current;
 
   const openDialog = useCallback((dialog) => {
     setDialogs((previous) => ({
@@ -81,16 +78,13 @@ export default function useSettings() {
     }));
   }, []);
 
-  const showSnackbar = useCallback(
-    (message, severity = "success") => {
-      setSnackbar({
-        open: true,
-        severity,
-        message,
-      });
-    },
-    []
-  );
+  const showSnackbar = useCallback((message, severity = "success") => {
+    setSnackbar({
+      open: true,
+      severity,
+      message,
+    });
+  }, []);
 
   const closeSnackbar = useCallback(() => {
     setSnackbar((previous) => ({
@@ -112,37 +106,19 @@ export default function useSettings() {
       setSaving(true);
 
       await Promise.all([
-        settingsService.saveGeneralSettings(
-          general.settings
-        ),
-        settingsService.saveAppearanceSettings(
-          appearance.settings
-        ),
-        settingsService.saveSecuritySettings(
-          security.settings
-        ),
-        settingsService.saveNotificationSettings(
-          notifications.settings
-        ),
-        settingsService.saveBusinessSettings(
-          business.settings
-        ),
-        settingsService.saveBackupSettings(
-          backup.settings
-        ),
+        settingsService.saveGeneralSettings(general.settings),
+        settingsService.saveAppearanceSettings(appearance.settings),
+        settingsService.saveSecuritySettings(security.settings),
+        settingsService.saveNotificationSettings(notifications.settings),
+        settingsService.saveBusinessSettings(business.settings),
+        settingsService.saveBackupSettings(backup.settings),
       ]);
 
-      snapshotRef.current =
-        JSON.stringify(settings);
+      snapshotRef.current = JSON.stringify(settings);
 
-      showSnackbar(
-        "Settings saved successfully."
-      );
+      showSnackbar("Settings saved successfully.");
     } catch {
-      showSnackbar(
-        "Failed to save settings.",
-        "error"
-      );
+      showSnackbar("Failed to save settings.", "error");
     } finally {
       setSaving(false);
     }
