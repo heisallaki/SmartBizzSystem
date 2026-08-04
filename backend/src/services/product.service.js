@@ -1,6 +1,7 @@
 const prisma = require("../config/prisma");
 const ApiError = require("../utils/ApiError");
 const { logAudit } = require("./audit.service");
+const notificationService = require("./notification.service");
 
 function computeStatus(stock, lowStockThreshold) {
   if (stock <= 0) return "OutOfStock";
@@ -129,7 +130,7 @@ async function deleteProduct(id, actorId) {
 }
 
 async function adjustStock({ productId, quantityChange, movementType, notes, actorId }) {
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const product = await tx.product.findUnique({ where: { id: productId } });
     if (!product || product.deletedAt) throw ApiError.notFound("Product not found.");
 
@@ -167,16 +168,19 @@ async function adjustStock({ productId, quantityChange, movementType, notes, act
       metadata: { quantityChange, movementType, stockAfter: newStock },
     });
 
-    return { product: updated, movement };
+    return { product: updated, movement, previousStatus: product.status };
   });
+
+  if (result.previousStatus === "InStock" && result.product.status !== "InStock") {
+    await notificationService.notifyLowStock(result.product);
+  }
+
+  return { product: result.product, movement: result.movement };
 }
 
-// Bridge for the frontend's decrementStock()/incrementStock() — restricted
-// to Sale/Return/VoidReversal at the route/validator level, which is what
-// makes it safe to leave open to any authenticated role.
 async function batchAdjustStock({ items, movementType, actorId }) {
-  return prisma.$transaction(async (tx) => {
-    const results = [];
+  const results = await prisma.$transaction(async (tx) => {
+    const batchResults = [];
 
     for (const { productId, quantityChange } of items) {
       const product = await tx.product.findUnique({ where: { id: productId } });
@@ -209,7 +213,7 @@ async function batchAdjustStock({ items, movementType, actorId }) {
         },
       });
 
-      results.push({ product: updated, movement });
+      batchResults.push({ product: updated, movement, previousStatus: product.status });
     }
 
     await logAudit({
@@ -219,12 +223,18 @@ async function batchAdjustStock({ items, movementType, actorId }) {
       metadata: { movementType, items },
     });
 
-    return results;
+    return batchResults;
   });
+
+  for (const result of results) {
+    if (result.previousStatus === "InStock" && result.product.status !== "InStock") {
+      await notificationService.notifyLowStock(result.product);
+    }
+  }
+
+  return results.map(({ product, movement }) => ({ product, movement }));
 }
 
-// Called directly by Sales' checkout service — not exposed as its own HTTP
-// endpoint.
 async function decrementStockForSale({ productId, quantity, saleId, actorId, tx }) {
   const db = tx || prisma;
 
@@ -240,7 +250,10 @@ async function decrementStockForSale({ productId, quantity, saleId, actorId, tx 
 
   const status = computeStatus(newStock, product.lowStockThreshold);
 
-  await db.product.update({ where: { id: productId }, data: { stock: newStock, status } });
+  const updated = await db.product.update({
+    where: { id: productId },
+    data: { stock: newStock, status },
+  });
 
   await db.stockMovement.create({
     data: {
@@ -254,10 +267,13 @@ async function decrementStockForSale({ productId, quantity, saleId, actorId, tx 
     },
   });
 
+  if (product.status === "InStock" && status !== "InStock") {
+    await notificationService.notifyLowStock(updated, db);
+  }
+
   return newStock;
 }
 
-// Reverses decrementStockForSale — called by Sales' void/edit/delete flows.
 async function reverseStockForSale({ productId, quantity, saleId, actorId, tx }) {
   const db = tx || prisma;
 

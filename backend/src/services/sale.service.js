@@ -3,6 +3,7 @@ const ApiError = require("../utils/ApiError");
 const { logAudit } = require("./audit.service");
 const productService = require("./product.service");
 const customerService = require("./customer.service");
+const notificationService = require("./notification.service");
 
 const PAYMENT_METHOD_TO_ENUM = {
   Cash: "Cash",
@@ -105,8 +106,6 @@ async function applySaleEffects(tx, sale, actorId) {
   }
 }
 
-// Reverses applySaleEffects — used by updateSale (to undo the old state
-// before applying the new one), voidSale, and deleteSale.
 async function reverseSaleEffects(tx, sale, actorId) {
   for (const item of sale.items) {
     await productService.reverseStockForSale({
@@ -163,13 +162,13 @@ async function getSaleById(id) {
 }
 
 async function createSale(data, actorId) {
-  return prisma.$transaction(async (tx) => {
+  const sale = await prisma.$transaction(async (tx) => {
     const customerId = await resolveCustomerId(tx, data.customerId);
     const { subtotal, totalDiscount, tax, grandTotal } = computeTotals(data);
     const invoiceNumber = await generateInvoiceNumber(tx);
     const paymentMethodEnum = PAYMENT_METHOD_TO_ENUM[data.paymentMethod];
 
-    const sale = await tx.sale.create({
+    const createdSale = await tx.sale.create({
       data: {
         invoiceNumber,
         customerId,
@@ -201,19 +200,25 @@ async function createSale(data, actorId) {
       include: { items: true, customer: true, cashier: true },
     });
 
-    if (sale.status === "Completed") {
-      await applySaleEffects(tx, sale, actorId);
+    if (createdSale.status === "Completed") {
+      await applySaleEffects(tx, createdSale, actorId);
     }
 
     await logAudit({
       userId: actorId,
       action: "sale.created",
       entityType: "sale",
-      entityId: sale.id,
+      entityId: createdSale.id,
     });
 
-    return mapSale(sale);
+    return createdSale;
   });
+
+  if (sale.status === "Completed") {
+    await notificationService.notifyNewSale(sale);
+  }
+
+  return mapSale(sale);
 }
 
 async function updateSale(id, data, actorId) {
@@ -280,9 +285,6 @@ async function updateSale(id, data, actorId) {
   });
 }
 
-// Soft-cancels a sale: status becomes "Cancelled", and if it was Completed,
-// stock is restored and the customer's purchase record is rolled back. The
-// record itself stays for audit purposes — this never removes the row.
 async function voidSale(id, actorId) {
   return prisma.$transaction(async (tx) => {
     const existing = await tx.sale.findUnique({

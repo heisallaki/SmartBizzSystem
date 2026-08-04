@@ -19,5 +19,6 @@ router.use("/permissions", require("./permission.routes"));
 router.use("/reports", require("./report.routes"));
 router.use("/expenses", require("./expense.routes"));
 router.use("/settings", require("./settings.routes"));
+router.use("/notifications", require("./notification.routes"));
 
 module.exports = router;
