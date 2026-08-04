@@ -15,6 +15,7 @@ router.use("/purchase-orders", require("./purchaseOrder.routes"));
 router.use("/invoices", require("./invoice.routes"));
 router.use("/users", require("./user.routes"));
 router.use("/roles", require("./role.routes"));
+router.use("/permissions", require("./permission.routes"));
 router.use("/reports", require("./report.routes"));
 router.use("/expenses", require("./expense.routes"));
 router.use("/settings", require("./settings.routes"));

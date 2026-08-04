@@ -36,6 +36,9 @@ import { saveAs } from "file-saver";
 import PageHeader from "../../components/common/PageHeader";
 import SnackbarAlert from "../../components/feedback/SnackbarAlert";
 
+import useAuth from "../auth/hooks/useAuth";
+import ROLES from "../../constants/roles";
+
 import useSettings from "./hooks/useSettings";
 
 import SettingsSidebar from "./components/SettingsSidebar";
@@ -52,7 +55,7 @@ import ExportDialog from "./components/ExportDialog";
 import LogoUploader from "./components/LogoUploader";
 import ColorPicker from "./components/ColorPicker";
 import ThemeSelector from "./components/ThemeSelector";
-import PermissionTable from "./components/PermissionTable";
+import PermissionMatrix from "./components/PermissionMatrix";
 
 import {
   SETTINGS_SECTIONS,
@@ -146,6 +149,8 @@ export default function SettingsPage() {
 
     saveSettings,
   } = useSettings();
+
+  const { user } = useAuth();
 
   const [processing, setProcessing] = useState(false);
   const [lastBackupSnapshot, setLastBackupSnapshot] =
@@ -616,14 +621,19 @@ export default function SettingsPage() {
               <Grid size={{ xs: 12 }}>
                 <SettingsCard
                   title="Roles & Permissions"
-                  description="Configure what each module allows for this account."
+                  description="Configure what each role can view, create, edit, and delete."
                 >
-                  <PermissionTable
-                    permissions={security.settings.roles}
-                    onPermissionChange={
-                      security.handlePermissionChange
-                    }
-                  />
+                  {user?.role === ROLES.ADMIN ? (
+                    <PermissionMatrix />
+                  ) : (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                    >
+                      Only Admins can view and edit role
+                      permissions.
+                    </Typography>
+                  )}
                 </SettingsCard>
               </Grid>
 
@@ -1243,7 +1253,7 @@ export default function SettingsPage() {
                               />
                             </ListItemButton>
 
-                            {index <
+                            {index 
                               SUPPORT_LINKS.length -
                                 1 && (
                               <Divider
