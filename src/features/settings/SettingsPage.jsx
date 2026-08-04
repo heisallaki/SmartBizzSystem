@@ -1253,9 +1253,7 @@ export default function SettingsPage() {
                               />
                             </ListItemButton>
 
-                            {index 
-                              SUPPORT_LINKS.length -
-                                1 && (
+                            {index !== SUPPORT_LINKS.length - 1 && (
                               <Divider
                                 sx={{ my: 0.5 }}
                               />
