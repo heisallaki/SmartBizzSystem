@@ -20,5 +20,7 @@ router.use("/reports", require("./report.routes"));
 router.use("/expenses", require("./expense.routes"));
 router.use("/settings", require("./settings.routes"));
 router.use("/notifications", require("./notification.routes"));
+router.use("/backups", require("./backup.routes"));
+router.use("/audit-logs", require("./auditLog.routes"));
 
 module.exports = router;

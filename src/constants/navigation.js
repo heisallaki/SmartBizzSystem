@@ -9,6 +9,7 @@ import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
 import ManageAccountsRoundedIcon from "@mui/icons-material/ManageAccountsRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import PaidRoundedIcon from "@mui/icons-material/PaidRounded";
+import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 
 import ROLES from "./roles";
 
@@ -75,6 +76,13 @@ const navigation = [
     subtitle: "Staff accounts and roles",
     path: "/users",
     icon: ManageAccountsRoundedIcon,
+    roles: [ROLES.ADMIN],
+  },
+  {
+    title: "Audit Log",
+    subtitle: "Track every change made in the system",
+    path: "/audit-log",
+    icon: HistoryRoundedIcon,
     roles: [ROLES.ADMIN],
   },
   {

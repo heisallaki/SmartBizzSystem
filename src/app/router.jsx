@@ -15,6 +15,7 @@ import ExpensesPage from "../features/expenses/ExpensesPage";
 import ReportsPage from "../features/reports/ReportsPage";
 import SettingsPage from "../features/settings/SettingsPage";
 import UsersPage from "../features/users/UsersPage";
+import AuditLogPage from "../features/audit-log/AuditLogPage";
 
 import ROLES from "../constants/roles";
 
@@ -66,6 +67,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
             <UsersPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "audit-log",
+        element: (
+          <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+            <AuditLogPage />
           </ProtectedRoute>
         ),
       },
