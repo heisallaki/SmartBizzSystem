@@ -32,16 +32,13 @@ import {
 } from "@mui/icons-material";
 
 import { saveAs } from "file-saver";
-
 import PageHeader from "../../components/common/PageHeader";
 import SnackbarAlert from "../../components/feedback/SnackbarAlert";
-
+import formatDate from "../../utils/formatDate";
 import useAuth from "../auth/hooks/useAuth";
 import ROLES from "../../constants/roles";
-
 import useSettings from "./hooks/useSettings";
-
-import SettingsSidebar from "./components/SettingsSidebar";
+import useBackupHistory from "./hooks/useBackupHistory";import SettingsSidebar from "./components/SettingsSidebar";
 import SettingsSection from "./components/SettingsSection";
 import SettingsCard from "./components/SettingsCard";
 import SettingsSwitch from "./components/SettingsSwitch";
@@ -56,6 +53,8 @@ import LogoUploader from "./components/LogoUploader";
 import ColorPicker from "./components/ColorPicker";
 import ThemeSelector from "./components/ThemeSelector";
 import PermissionMatrix from "./components/PermissionMatrix";
+import * as settingsActions from "./services/settings.actions";
+import backupsService from "./services/backups.service";
 
 import {
   SETTINGS_SECTIONS,
@@ -75,6 +74,14 @@ import {
 import * as settingsActions from "./services/settings.actions";
 
 const APP_VERSION = "1.0.0";
+
+function formatBytes(bytes) {
+  if (!bytes) return "0 KB";
+  const kilobytes = bytes / 1024;
+  if (kilobytes < 1024) return `${kilobytes.toFixed(1)} KB`;
+  return `${(kilobytes / 1024).toFixed(1)} MB`;
+}
+
 const APP_BUILD = "2026.07.16";
 
 const TECH_STACK = [
@@ -152,6 +159,9 @@ export default function SettingsPage() {
 
   const { user } = useAuth();
 
+  const { backups, refresh: refreshBackups } = useBackupHistory();
+
+  const [processing, setProcessing] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [lastBackupSnapshot, setLastBackupSnapshot] =
     useState(null);
@@ -279,15 +289,20 @@ export default function SettingsPage() {
     try {
       setProcessing(true);
 
-      const result = await settingsActions.createBackup(
-        settings
+      const result = await backupsService.createBackup();
+
+      const blob = new Blob(
+        [JSON.stringify(result.data, null, 2)],
+        { type: "application/json" }
       );
 
-      setLastBackupSnapshot(result);
+      saveAs(blob, result.fileName);
 
       backup.update({
-        lastBackup: result.createdAt,
+        lastBackup: result.completedAt,
       });
+
+      refreshBackups();
 
       closeDialog("backup");
 
@@ -1011,29 +1026,87 @@ export default function SettingsPage() {
               <Grid size={{ xs: 12, md: 6 }}>
                 <SettingsCard
                   title="Restore"
-                  description="Restore your data from the most recent backup taken this session."
+                  description="Restoring business data from a backup file."
                 >
                   <Typography
                     variant="body2"
                     color="text.secondary"
                   >
-                    {lastBackupSnapshot
-                      ? "A backup is available to restore."
-                      : "Create a backup first to enable restore."}
+                    Restoring from a backup file isn&apos;t
+                    available yet. Keep your downloaded
+                    backup files somewhere safe in the
+                    meantime.
                   </Typography>
 
                   <Button
                     variant="outlined"
                     color="warning"
                     startIcon={<RestoreRounded />}
-                    disabled={!lastBackupSnapshot}
-                    onClick={() =>
-                      openDialog("restore")
-                    }
+                    disabled
                     sx={{ alignSelf: "flex-start" }}
                   >
                     Restore Latest Backup
                   </Button>
+                </SettingsCard>
+              </Grid>
+
+              <Grid size={{ xs: 12 }}>
+                <SettingsCard
+                  title="Backup History"
+                  description="Recent backups of your real business data."
+                >
+                  {backups.length === 0 ? (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                    >
+                      No backups have been created yet.
+                    </Typography>
+                  ) : (
+                    <Stack spacing={1}>
+                      {backups.map((item) => (
+                        <Stack
+                          key={item.id}
+                          direction="row"
+                          justifyContent="space-between"
+                          alignItems="center"
+                          sx={{
+                            py: 1,
+                            borderBottom: 1,
+                            borderColor: "divider",
+                          }}
+                        >
+                          <Box>
+                            <Typography
+                              variant="body2"
+                              fontWeight={600}
+                            >
+                              {item.fileName}
+                            </Typography>
+
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {`${formatDate(item.startedAt)} · ${item.triggeredByName} · ${formatBytes(item.fileSizeBytes)}`}
+                            </Typography>
+                          </Box>
+
+                          <Chip
+                            label={item.status}
+                            size="small"
+                            color={
+                              item.status === "Completed"
+                                ? "success"
+                                : item.status === "Failed"
+                                ? "error"
+                                : "default"
+                            }
+                          />
+                        </Stack>
+                      ))}
+                    </Stack>
+                  )}
                 </SettingsCard>
               </Grid>
 
