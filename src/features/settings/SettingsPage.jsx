@@ -162,7 +162,6 @@ export default function SettingsPage() {
   const { backups, refresh: refreshBackups } = useBackupHistory();
 
   const [processing, setProcessing] = useState(false);
-  const [processing, setProcessing] = useState(false);
   const [lastBackupSnapshot, setLastBackupSnapshot] =
     useState(null);
 
