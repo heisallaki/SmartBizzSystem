@@ -71,8 +71,6 @@ import {
   PRIMARY_COLOR_OPTIONS,
 } from "./constants/settings.constants";
 
-import * as settingsActions from "./services/settings.actions";
-
 const APP_VERSION = "1.0.0";
 
 function formatBytes(bytes) {
