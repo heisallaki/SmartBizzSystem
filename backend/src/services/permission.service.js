@@ -18,6 +18,30 @@ const MODULES = [
 
 const ACTIONS = ["view", "create", "edit", "delete"];
 
+const DEFAULT_ROLE_GRANTS = {
+  Manager: {
+    Dashboard: ["view"],
+    Inventory: ["view", "create", "edit", "delete"],
+    Sales: ["view", "create", "edit", "delete"],
+    Customers: ["view", "create", "edit", "delete"],
+    Invoices: ["view", "create", "edit", "delete"],
+    Suppliers: ["view", "create", "edit", "delete"],
+    "Purchase Orders": ["view", "create", "edit", "delete"],
+    Expenses: ["view", "create", "edit", "delete"],
+    Reports: ["view"],
+    Settings: ["view"],
+  },
+  Cashier: {
+    Dashboard: ["view"],
+    Inventory: ["view"],
+    Sales: ["view", "create"],
+    Customers: ["view"],
+    Invoices: ["view"],
+    Reports: ["view"],
+    Settings: ["view"],
+  },
+};
+
 function moduleSlug(moduleName) {
   return moduleName.toLowerCase().replace(/\s+/g, "-");
 }
@@ -47,6 +71,53 @@ async function ensurePermissionsSeeded() {
   if (missing.length > 0) {
     await prisma.permission.createMany({ data: missing, skipDuplicates: true });
   }
+}
+
+async function ensureDefaultRoleGrantsSeeded() {
+  await ensurePermissionsSeeded();
+
+  const permissions = await prisma.permission.findMany();
+  const permissionIdByCode = new Map(
+    permissions.map((permission) => [permission.code, permission.id])
+  );
+
+  const roles = await prisma.role.findMany({
+    where: { name: { in: Object.keys(DEFAULT_ROLE_GRANTS) } },
+  });
+
+  for (const role of roles) {
+    const existingCount = await prisma.rolePermission.count({ where: { roleId: role.id } });
+    if (existingCount > 0) continue;
+
+    const grants = DEFAULT_ROLE_GRANTS[role.name];
+    const data = [];
+
+    Object.entries(grants).forEach(([moduleName, actions]) => {
+      actions.forEach((action) => {
+        const code = permissionCode(moduleName, action);
+        const permissionId = permissionIdByCode.get(code);
+        if (permissionId) data.push({ roleId: role.id, permissionId });
+      });
+    });
+
+    if (data.length > 0) {
+      await prisma.rolePermission.createMany({ data, skipDuplicates: true });
+    }
+  }
+}
+
+async function getAllRolePermissions() {
+  const rolePermissions = await prisma.rolePermission.findMany({
+    include: {
+      role: { select: { name: true } },
+      permission: { select: { code: true } },
+    },
+  });
+
+  return rolePermissions.map((entry) => ({
+    roleName: entry.role.name,
+    code: entry.permission.code,
+  }));
 }
 
 async function listPermissions() {
@@ -126,4 +197,8 @@ module.exports = {
   listPermissions,
   getRolePermissionMatrix,
   updateRolePermissionMatrix,
+  ensureDefaultRoleGrantsSeeded,
+  getAllRolePermissions,
+  moduleSlug,
+  permissionCode,
 };

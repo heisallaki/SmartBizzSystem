@@ -6,7 +6,8 @@ const {
   patchSupplier,
   deleteSupplier,
 } = require("../controllers/supplier.controller");
-const { requireAuth, requireRole } = require("../middleware/auth");
+const { requireAuth } = require("../middleware/auth");
+const { requirePermission } = require("../middleware/permission");
 const validate = require("../middleware/validate");
 const {
   listSuppliersQuerySchema,
@@ -17,12 +18,26 @@ const {
 const router = Router();
 
 router.use(requireAuth);
-router.use(requireRole("Admin", "Manager")); // supplier contact/spend info isn't a Cashier concern
 
-router.get("/", validate(listSuppliersQuerySchema, "query"), getSuppliers);
-router.get("/:id", getSupplier);
-router.post("/", validate(createSupplierSchema), postSupplier);
-router.patch("/:id", validate(updateSupplierSchema), patchSupplier);
-router.delete("/:id", deleteSupplier);
+router.get(
+  "/",
+  requirePermission("Suppliers", "view"),
+  validate(listSuppliersQuerySchema, "query"),
+  getSuppliers
+);
+router.get("/:id", requirePermission("Suppliers", "view"), getSupplier);
+router.post(
+  "/",
+  requirePermission("Suppliers", "create"),
+  validate(createSupplierSchema),
+  postSupplier
+);
+router.patch(
+  "/:id",
+  requirePermission("Suppliers", "edit"),
+  validate(updateSupplierSchema),
+  patchSupplier
+);
+router.delete("/:id", requirePermission("Suppliers", "delete"), deleteSupplier);
 
 module.exports = router;

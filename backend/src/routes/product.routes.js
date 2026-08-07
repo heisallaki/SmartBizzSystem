@@ -9,7 +9,8 @@ const {
   postBatchAdjustStock,
   getStockMovements,
 } = require("../controllers/product.controller");
-const { requireAuth, requireRole } = require("../middleware/auth");
+const { requireAuth } = require("../middleware/auth");
+const { requirePermission } = require("../middleware/permission");
 const validate = require("../middleware/validate");
 const {
   createProductSchema,
@@ -22,34 +23,42 @@ const {
 
 const router = Router();
 
-router.use(requireAuth); // every product route needs a logged-in user, Cashiers included
+router.use(requireAuth); 
 
-router.get("/", validate(listProductsQuerySchema, "query"), getProducts);
+router.get(
+  "/",
+  requirePermission("Inventory", "view"),
+  validate(listProductsQuerySchema, "query"),
+  getProducts
+);
 router.get(
   "/:id/stock-movements",
+  requirePermission("Inventory", "view"),
   validate(paginationQuerySchema, "query"),
   getStockMovements
 );
-router.get("/:id", getProduct);
+router.get("/:id", requirePermission("Inventory", "view"), getProduct);
 
-router.post("/", requireRole("Admin", "Manager"), validate(createProductSchema), postProduct);
+router.post(
+  "/",
+  requirePermission("Inventory", "create"),
+  validate(createProductSchema),
+  postProduct
+);
 router.patch(
   "/:id",
-  requireRole("Admin", "Manager"),
+  requirePermission("Inventory", "edit"),
   validate(updateProductSchema),
   patchProduct
 );
-router.delete("/:id", requireRole("Admin", "Manager"), deleteProduct);
+router.delete("/:id", requirePermission("Inventory", "delete"), deleteProduct);
 router.post(
   "/:id/adjust-stock",
-  requireRole("Admin", "Manager"),
+  requirePermission("Inventory", "edit"),
   validate(adjustStockSchema),
   postAdjustStock
 );
 
-// No requireRole here on purpose — restricted to Sale/Return/VoidReversal
-// at the schema level, so any logged-in role (Cashiers included) can hit
-// it as a side effect of completing/voiding a sale.
 router.post(
   "/batch-adjust-stock",
   validate(batchAdjustStockSchema),

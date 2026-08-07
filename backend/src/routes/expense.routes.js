@@ -8,7 +8,8 @@ const {
   patchExpense,
   deleteExpense,
 } = require("../controllers/expense.controller");
-const { requireAuth, requireRole } = require("../middleware/auth");
+const { requireAuth } = require("../middleware/auth");
+const { requirePermission } = require("../middleware/permission");
 const validate = require("../middleware/validate");
 const {
   listExpensesQuerySchema,
@@ -20,15 +21,34 @@ const {
 const router = Router();
 
 router.use(requireAuth);
-router.use(requireRole("Admin", "Manager"));
 
-router.get("/categories", getExpenseCategories);
-router.post("/categories", validate(createExpenseCategorySchema), postExpenseCategory);
+router.get("/categories", requirePermission("Expenses", "view"), getExpenseCategories);
+router.post(
+  "/categories",
+  requirePermission("Expenses", "create"),
+  validate(createExpenseCategorySchema),
+  postExpenseCategory
+);
 
-router.get("/", validate(listExpensesQuerySchema, "query"), getExpenses);
-router.get("/:id", getExpense);
-router.post("/", validate(createExpenseSchema), postExpense);
-router.patch("/:id", validate(updateExpenseSchema), patchExpense);
-router.delete("/:id", deleteExpense);
+router.get(
+  "/",
+  requirePermission("Expenses", "view"),
+  validate(listExpensesQuerySchema, "query"),
+  getExpenses
+);
+router.get("/:id", requirePermission("Expenses", "view"), getExpense);
+router.post(
+  "/",
+  requirePermission("Expenses", "create"),
+  validate(createExpenseSchema),
+  postExpense
+);
+router.patch(
+  "/:id",
+  requirePermission("Expenses", "edit"),
+  validate(updateExpenseSchema),
+  patchExpense
+);
+router.delete("/:id", requirePermission("Expenses", "delete"), deleteExpense);
 
 module.exports = router;

@@ -7,7 +7,8 @@ const {
   deleteCustomer,
   getStatistics,
 } = require("../controllers/customer.controller");
-const { requireAuth, requireRole } = require("../middleware/auth");
+const { requireAuth } = require("../middleware/auth");
+const { requirePermission } = require("../middleware/permission");
 const validate = require("../middleware/validate");
 const {
   listCustomersQuerySchema,
@@ -17,22 +18,30 @@ const {
 
 const router = Router();
 
-router.use(requireAuth); // Cashiers need read access too, to pick a customer during a sale
+router.use(requireAuth); 
 
-// Must come before "/:code" — otherwise Express matches "statistics" as a
-// customer code and this route is never reached.
-router.get("/statistics", getStatistics);
+router.get("/statistics", requirePermission("Customers", "view"), getStatistics);
 
-router.get("/", validate(listCustomersQuerySchema, "query"), getCustomers);
-router.get("/:code", getCustomer);
+router.get(
+  "/",
+  requirePermission("Customers", "view"),
+  validate(listCustomersQuerySchema, "query"),
+  getCustomers
+);
+router.get("/:code", requirePermission("Customers", "view"), getCustomer);
 
-router.post("/", requireRole("Admin", "Manager"), validate(createCustomerSchema), postCustomer);
+router.post(
+  "/",
+  requirePermission("Customers", "create"),
+  validate(createCustomerSchema),
+  postCustomer
+);
 router.patch(
   "/:code",
-  requireRole("Admin", "Manager"),
+  requirePermission("Customers", "edit"),
   validate(updateCustomerSchema),
   patchCustomer
 );
-router.delete("/:code", requireRole("Admin", "Manager"), deleteCustomer);
+router.delete("/:code", requirePermission("Customers", "delete"), deleteCustomer);
 
 module.exports = router;

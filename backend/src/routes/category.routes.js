@@ -6,7 +6,8 @@ const {
   patchCategory,
   deleteCategory,
 } = require("../controllers/category.controller");
-const { requireAuth, requireRole } = require("../middleware/auth");
+const { requireAuth } = require("../middleware/auth");
+const { requirePermission } = require("../middleware/permission");
 const validate = require("../middleware/validate");
 const { createCategorySchema, updateCategorySchema } = require("../validators/category.validator");
 
@@ -14,15 +15,20 @@ const router = Router();
 
 router.use(requireAuth);
 
-router.get("/", getCategories);
-router.get("/:id", getCategory);
-router.post("/", requireRole("Admin", "Manager"), validate(createCategorySchema), postCategory);
+router.get("/", requirePermission("Inventory", "view"), getCategories);
+router.get("/:id", requirePermission("Inventory", "view"), getCategory);
+router.post(
+  "/",
+  requirePermission("Inventory", "create"),
+  validate(createCategorySchema),
+  postCategory
+);
 router.patch(
   "/:id",
-  requireRole("Admin", "Manager"),
+  requirePermission("Inventory", "edit"),
   validate(updateCategorySchema),
   patchCategory
 );
-router.delete("/:id", requireRole("Admin", "Manager"), deleteCategory);
+router.delete("/:id", requirePermission("Inventory", "delete"), deleteCategory);
 
 module.exports = router;

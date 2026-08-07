@@ -8,7 +8,8 @@ const {
   postReceive,
   deletePurchaseOrder,
 } = require("../controllers/purchaseOrder.controller");
-const { requireAuth, requireRole } = require("../middleware/auth");
+const { requireAuth } = require("../middleware/auth");
+const { requirePermission } = require("../middleware/permission");
 const validate = require("../middleware/validate");
 const {
   listPurchaseOrdersQuerySchema,
@@ -21,14 +22,38 @@ const {
 const router = Router();
 
 router.use(requireAuth);
-router.use(requireRole("Admin", "Manager"));
 
-router.get("/", validate(listPurchaseOrdersQuerySchema, "query"), getPurchaseOrders);
-router.get("/:id", getPurchaseOrder);
-router.post("/", validate(createPurchaseOrderSchema), postPurchaseOrder);
-router.patch("/:id", validate(updatePurchaseOrderSchema), patchPurchaseOrder);
-router.patch("/:id/status", validate(updateStatusSchema), patchStatus);
-router.post("/:id/receive", validate(receivePurchaseOrderSchema), postReceive);
-router.delete("/:id", deletePurchaseOrder);
+router.get(
+  "/",
+  requirePermission("Purchase Orders", "view"),
+  validate(listPurchaseOrdersQuerySchema, "query"),
+  getPurchaseOrders
+);
+router.get("/:id", requirePermission("Purchase Orders", "view"), getPurchaseOrder);
+router.post(
+  "/",
+  requirePermission("Purchase Orders", "create"),
+  validate(createPurchaseOrderSchema),
+  postPurchaseOrder
+);
+router.patch(
+  "/:id",
+  requirePermission("Purchase Orders", "edit"),
+  validate(updatePurchaseOrderSchema),
+  patchPurchaseOrder
+);
+router.patch(
+  "/:id/status",
+  requirePermission("Purchase Orders", "edit"),
+  validate(updateStatusSchema),
+  patchStatus
+);
+router.post(
+  "/:id/receive",
+  requirePermission("Purchase Orders", "edit"),
+  validate(receivePurchaseOrderSchema),
+  postReceive
+);
+router.delete("/:id", requirePermission("Purchase Orders", "delete"), deletePurchaseOrder);
 
 module.exports = router;

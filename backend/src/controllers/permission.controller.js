@@ -1,6 +1,7 @@
 const permissionService = require("../services/permission.service");
 const asyncHandler = require("../middleware/asyncHandler");
 const ApiResponse = require("../utils/ApiResponse");
+const { invalidateGrantsCache } = require("../middleware/permission");
 
 const getPermissions = asyncHandler(async (req, res) => {
   const permissions = await permissionService.listPermissions();
@@ -18,6 +19,7 @@ const putRoleMatrix = asyncHandler(async (req, res) => {
     req.body.matrix,
     req.user.id
   );
+  invalidateGrantsCache();
   ApiResponse.ok(res, matrix);
 });
 
