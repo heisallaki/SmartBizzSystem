@@ -25,8 +25,6 @@ const EMPTY_SUPPLIER = {
   email: "",
   phone: "",
   category: "",
-  totalOrders: "",
-  totalSpend: "",
   status: "Active",
 };
 
@@ -101,6 +99,8 @@ export default function SupplierDialog({
         "Category is required.";
     }
 
+    setErrors(validationErrors);
+
     if (form.totalOrders === "") {
       validationErrors.totalOrders =
         "Total orders is required.";
@@ -134,19 +134,10 @@ export default function SupplierDialog({
 
     setSaving(true);
     try {
-      await onSave({
-        ...form,
-        totalOrders: Number(
-          form.totalOrders
-        ),
-        totalSpend: Number(
-          form.totalSpend
-        ),
-      });
+      const { totalOrders, totalSpend, ...payload } = form;
 
-      // Only reached on success — a thrown error (already surfaced via
-      // snackbar inside useSuppliers.js) leaves the dialog open with the
-      // form intact instead of silently closing over a real failure.
+      await onSave(payload);
+
       setForm(EMPTY_SUPPLIER);
       setErrors({});
       onClose();

@@ -20,8 +20,6 @@ const createSupplierSchema = z.object({
   county: z.string().trim().max(100).optional(),
   taxNumber: z.string().trim().max(50).optional(),
   notes: z.string().trim().max(2000).optional(),
-  totalOrders: z.coerce.number().int().nonnegative("Orders can't be negative.").default(0),
-  totalSpend: z.coerce.number().nonnegative("Total spend can't be negative.").default(0),
   status: z.enum(["Active", "OnHold", "Inactive"]).default("Active"),
 });
 
