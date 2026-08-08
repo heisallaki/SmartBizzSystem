@@ -8,6 +8,7 @@ import settingsData, {
 } from "../data/settingsData";
 
 import businessSettingsService from "./businessSettings.service";
+import notificationPreferencesService from "./notificationPreferences.service";
 
 const NETWORK_DELAY = 500;
 
@@ -51,9 +52,14 @@ export async function getSecuritySettings() {
 }
 
 export async function getNotificationSettings() {
-  await delay();
+  const real = await notificationPreferencesService.getNotificationPreferences();
 
-  return clone(notificationSettings);
+  return {
+    ...clone(notificationSettings),
+    systemNotifications: real.systemNotifications,
+    salesAlerts: real.salesAlerts,
+    lowStockAlerts: real.lowStockAlerts,
+  };
 }
 
 export async function getBusinessSettings() {
@@ -106,9 +112,18 @@ export async function saveSecuritySettings(data) {
 }
 
 export async function saveNotificationSettings(data) {
-  await delay();
+  const saved = await notificationPreferencesService.updateNotificationPreferences({
+    systemNotifications: data.systemNotifications,
+    salesAlerts: data.salesAlerts,
+    lowStockAlerts: data.lowStockAlerts,
+  });
 
-  return clone(data);
+  return {
+    ...clone(data),
+    systemNotifications: saved.systemNotifications,
+    salesAlerts: saved.salesAlerts,
+    lowStockAlerts: saved.lowStockAlerts,
+  };
 }
 
 export async function saveBusinessSettings(data) {

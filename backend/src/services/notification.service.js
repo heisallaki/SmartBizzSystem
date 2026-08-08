@@ -1,5 +1,6 @@
 const prisma = require("../config/prisma");
 const ApiError = require("../utils/ApiError");
+const notificationPreferenceService = require("./notificationPreference.service");
 
 const NOTIFIABLE_ROLES = ["Admin", "Manager"];
 
@@ -30,6 +31,9 @@ async function notifyLowStock(product, tx) {
   const db = tx || prisma;
 
   try {
+    const preferences = await notificationPreferenceService.getNotificationPreferences();
+    if (!preferences.systemNotifications || !preferences.lowStockAlerts) return;
+
     const userIds = await getNotifiableUserIds(db);
 
     const title = product.status === "OutOfStock" ? "Product out of stock" : "Product running low";
@@ -49,6 +53,9 @@ async function notifyNewSale(sale, tx) {
   const db = tx || prisma;
 
   try {
+    const preferences = await notificationPreferenceService.getNotificationPreferences();
+    if (!preferences.systemNotifications || !preferences.salesAlerts) return;
+
     const userIds = await getNotifiableUserIds(db);
 
     await createForUsers(db, userIds, {

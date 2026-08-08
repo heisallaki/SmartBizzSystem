@@ -19,7 +19,7 @@ export default function useSettings() {
   const business = useBusinessSettings();
   const backup = useBackupSettings();
 
-  const loading = general.loading || business.loading;
+const loading = general.loading || business.loading || notifications.loading;
 
   const [saving, setSaving] = useState(false);
 

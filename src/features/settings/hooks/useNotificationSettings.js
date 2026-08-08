@@ -1,13 +1,30 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-import {
-  notificationSettings as initialSettings,
-} from "../data/settingsData";
+import { notificationSettings as initialSettings } from "../data/settingsData";
+import * as settingsService from "../services/settings.service";
 
 export default function useNotificationSettings() {
-  const [settings, setSettings] = useState(() =>
-    structuredClone(initialSettings)
-  );
+  const [settings, setSettings] = useState(() => structuredClone(initialSettings));
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadSettings = async () => {
+      try {
+        const data = await settingsService.getNotificationSettings();
+        if (active) setSettings(data);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    loadSettings();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleSwitchChange = useCallback((event) => {
     const { name, checked } = event.target;
@@ -31,6 +48,7 @@ export default function useNotificationSettings() {
 
   return {
     settings,
+    loading,
 
     update,
     reset,
