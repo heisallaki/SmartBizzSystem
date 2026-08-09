@@ -1,98 +1,74 @@
 # SmartBizzSystem
 
-A modern inventory and sales management system designed for small and medium-sized businesses.
+A point-of-sale and business management platform built for small and medium-sized businesses in Kenya. It brings sales, inventory, customers, suppliers, purchasing, invoicing, expenses, and reporting into one system, with support for KES, M-Pesa, and Kenyan business requirements.
 
-## Overview
+## Features
 
-SmartBizzSystem is a web-based business management application focused on helping businesses efficiently manage inventory, sales, suppliers, and business reports through an intuitive dashboard.
-
-The project is being developed incrementally following professional software development practices, with version control, project planning, and documented milestones.
-
----
-
-## Planned Features
-
-- Secure Authentication & Role-Based Access Control
-- Dashboard with Business Analytics
-- Inventory & Stock Management
-- Supplier Management
-- Customer Management
-- Sales & Order Processing
-- Business Reports & Data Visualization
-- Settings & System Configuration
-- Import & Export (Excel & PDF)
-- Responsive Material UI Interface
-- REST API Backend
-- PostgreSQL Database Integration
----
+* **Sales & POS** — streamlined checkout, multiple payment methods, receipts, and sale management
+* **Inventory** — products, categories, stock adjustments, and low-stock tracking
+* **Customers & Suppliers** — contact management, transaction history, and order tracking
+* **Purchase Orders** — draft, approval, and receiving workflow with partial receiving
+* **Invoicing** — create invoices from sales or independently, with payment tracking
+* **Expenses** — categorized business expense management
+* **Reports** — sales, revenue, inventory, customer, and profit & loss reports
+* **Dashboard** — overview of sales, revenue, and inventory health
+* **Team Accounts** — role-based access with configurable permissions
+* **Notifications & Audit Logs** — system alerts and activity tracking
+* **Backups** — on-demand data backups for administrative use
 
 ## Tech Stack
 
-### Frontend
-- React 19
-- Vite
-- JavaScript (ES6+)
-- Material UI (MUI)
-- React Router
-- Axios
-- Recharts
-- jsPDF
-- SheetJS (xlsx)
+**Frontend:** React 19, Vite, Material UI, React Router, Recharts
+**Backend:** Node.js, Express, Prisma ORM
+**Database:** PostgreSQL (Neon)
 
-### Backend
-- Node.js
-- Express.js
-- Prisma ORM
-- JWT Authentication
-- bcrypt
+## Getting Started
 
-### Database
-- PostgreSQL
-- Neon Database
+Clone the repository and install the dependencies:
 
-### Deployment
-- Vercel (Frontend)
-- Render (Backend)
+```bash
+git clone https://github.com/heisallaki/SmartBizzSystem.git
+cd SmartBizzSystem
+npm install
 
----
+cd backend
+npm install
+```
 
-## Project Status
+Create the required environment variables in `backend/.env` and `.env.local` at the project root.
 
-🚧 In Development
+Set up the database and start the backend:
 
-Current Version:
-v0.1.0
+```bash
+cd backend
+npm run prisma:migrate
+npm run prisma:seed
+npm run dev
+```
 
----
+In a separate terminal, start the frontend:
 
-## Development Workflow
+```bash
+npm run dev
+```
 
-Development follows a milestone-based workflow using GitHub Projects.
+The seed process creates the initial Admin account using the configured bootstrap credentials. Use this account to sign in and create additional team accounts.
 
-Each feature progresses through:
+## Project Structure
 
-To Do → In Progress → Done
+```text
+SmartBizzSystem/
+├── backend/        # API, business logic, authentication and database
+├── src/            # Frontend application
+│   ├── features/   # Business modules
+│   └── components/ # Shared UI components
+└── prisma/         # Database schema and migrations
+```
 
-Every completed milestone is committed with descriptive Git messages to maintain a clean and professional development history.
+## Deployment
 
----
-
-## Roadmap
-
-- Project Setup
-- Database Design
-- Authentication
-- Dashboard UI
-- Inventory Module
-- Sales Module
-- Supplier Management
-- Reports & Analytics
-- Testing
-- Deployment
-- Documentation
-
----
+The frontend is deployed on Vercel, the backend on Render, and the PostgreSQL database is hosted on Neon.
 
 ## License
 
-This project is developed for educational and portfolio purposes.
+Private project. All rights reserved.
