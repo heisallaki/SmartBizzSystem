@@ -141,26 +141,6 @@ export default function useCustomers() {
   );
 }
 
-    if (search.trim()) {
-  const keyword = search.toLowerCase();
-
-  result = result.filter((customer) =>
-    [
-      customer.id,
-      customer.fullName,
-      customer.email,
-      customer.phone,
-      customer.company,
-    ]
-      .filter(Boolean)
-      .some((field) =>
-        String(field)
-          .toLowerCase()
-          .includes(keyword)
-      )
-  );
-}
-
     return result;
   }, [customers, filters, search]);
 

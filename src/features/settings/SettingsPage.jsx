@@ -160,7 +160,6 @@ export default function SettingsPage() {
   const { backups, refresh: refreshBackups } = useBackupHistory();
 
   const [processing, setProcessing] = useState(false);
-  const [lastBackupSnapshot, setLastBackupSnapshot] =
     useState(null);
 
   const handleResetAll = () => {
@@ -337,28 +336,6 @@ export default function SettingsPage() {
     } catch {
       showSnackbar(
         "Failed to restore backup.",
-        "error"
-      );
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  const handleResetDemoData = async () => {
-    try {
-      setProcessing(true);
-
-      await settingsActions.resetDemoData();
-
-      handleResetAll();
-      setLastBackupSnapshot(null);
-
-      closeDialog("reset");
-
-      showSnackbar("Demo data has been reset.");
-    } catch {
-      showSnackbar(
-        "Failed to reset demo data.",
         "error"
       );
     } finally {
@@ -1413,23 +1390,6 @@ export default function SettingsPage() {
         confirmColor="warning"
         onClose={() => closeDialog("restore")}
         onConfirm={handleRestoreBackup}
-      />
-
-      <ConfirmationDialog
-        open={dialogs.reset}
-        loading={processing}
-        title="Reset Demo Data"
-        message="This will erase all changes and restore SmartBizz to its original demo state. This action cannot be undone."
-        icon={
-          <WarningAmberRounded
-            color="error"
-            sx={{ fontSize: 48 }}
-          />
-        }
-        confirmText="Reset Data"
-        confirmColor="error"
-        onClose={() => closeDialog("reset")}
-        onConfirm={handleResetDemoData}
       />
 
       <SnackbarAlert

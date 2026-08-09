@@ -409,10 +409,6 @@ export default function useCreateSale({ onSaleCreated } = {}) {
         );
       }
 
-
-      resetSale();
-
-
       onSaleCreated?.(sale);
 
 

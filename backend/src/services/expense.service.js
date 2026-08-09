@@ -1,6 +1,7 @@
 const prisma = require("../config/prisma");
 const ApiError = require("../utils/ApiError");
 const { logAudit } = require("./audit.service");
+const { getBusinessToday } = require("../utils/businessTime");
 
 const PAYMENT_METHOD_TO_ENUM = {
   Cash: "Cash",
@@ -135,7 +136,9 @@ async function createExpense(data, actorId) {
       supplierId: data.supplierId ?? null,
       description: data.description,
       amount: data.amount,
-      expenseDate: data.expenseDate ? new Date(`${data.expenseDate}T00:00:00.000Z`) : new Date(),
+       expenseDate: data.expenseDate
+        ? new Date(`${data.expenseDate}T00:00:00.000Z`)
+        : getBusinessToday(),
       paymentMethod: PAYMENT_METHOD_TO_ENUM[data.paymentMethod],
       receiptUrl: data.receiptUrl,
       recordedBy: actorId,

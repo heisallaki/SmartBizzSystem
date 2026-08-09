@@ -1,5 +1,5 @@
 const prisma = require("../config/prisma");
-
+const { getBusinessNow } = require("../utils/businessTime");
 const RECENT_TRANSACTIONS_LIMIT = 5;
 const LOW_STOCK_LIMIT = 5;
 const CHART_MONTHS = 6;
@@ -43,7 +43,7 @@ async function loadCompletedSalesBetween(start, end) {
 }
 
 async function getDashboardStats() {
-  const now = new Date();
+  const now = getBusinessNow();
   const thisMonthStart = startOfMonth(now);
   const nextMonthStart = addMonths(thisMonthStart, 1);
   const lastMonthStart = addMonths(thisMonthStart, -1);
@@ -92,7 +92,7 @@ async function getDashboardStats() {
 }
 
 async function getSalesChart() {
-  const now = new Date();
+  const now = getBusinessNow();
   const currentMonthStart = startOfMonth(now);
 
   const months = [];

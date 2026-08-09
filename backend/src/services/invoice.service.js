@@ -1,6 +1,7 @@
 const prisma = require("../config/prisma");
 const ApiError = require("../utils/ApiError");
 const { logAudit } = require("./audit.service");
+const { getBusinessToday } = require("../utils/businessTime");
 
 async function generateInvoiceNumber(tx) {
   const last = await tx.invoice.findFirst({
@@ -14,10 +15,6 @@ async function generateInvoiceNumber(tx) {
   return `BILL-${String(nextNumber).padStart(4, "0")}`;
 }
 
-// Live status — computed on every read rather than relying solely on
-// whatever's stored, so "Overdue" becomes accurate the moment a due date
-// passes without needing a scheduled job. Never overrides a manually-set
-// "Void", and once "Paid" stays "Paid".
 function computeLiveStatus(invoice) {
   if (invoice.status === "Void") return "Void";
 
@@ -94,9 +91,6 @@ async function getInvoiceById(id) {
   return mapInvoice(invoice);
 }
 
-// Generates a formal invoice document from an already-recorded sale,
-// copying its totals and line items 1:1. The sale must have a real
-// (non-walk-in) customer — there's no one to bill otherwise.
 async function createFromSale({ saleId, dueInDays, notes }, actorId) {
   return prisma.$transaction(async (tx) => {
     const sale = await tx.sale.findUnique({
@@ -109,7 +103,7 @@ async function createFromSale({ saleId, dueInDays, notes }, actorId) {
     }
 
     const invoiceNumber = await generateInvoiceNumber(tx);
-    const issueDate = new Date();
+    const issueDate = getBusinessToday();
     const dueDate = new Date(issueDate);
     dueDate.setDate(dueDate.getDate() + dueInDays);
 
@@ -149,17 +143,13 @@ async function createFromSale({ saleId, dueInDays, notes }, actorId) {
   });
 }
 
-// A standalone B2B invoice not tied to any POS sale — totals are computed
-// from the submitted line items directly (no tax breakdown here, since
-// there's no cart/taxRate concept for a manually-written invoice; add a
-// taxTotal input later if that's needed).
 async function createStandalone({ customerId, items, issueDate, dueInDays, notes }, actorId) {
   return prisma.$transaction(async (tx) => {
     const customer = await tx.customer.findUnique({ where: { customerCode: customerId } });
     if (!customer) throw ApiError.badRequest("Selected customer does not exist.");
 
     const invoiceNumber = await generateInvoiceNumber(tx);
-    const issue = issueDate ? new Date(issueDate) : new Date();
+    const issue = issueDate ? new Date(issueDate) : getBusinessToday();
     const dueDate = new Date(issue);
     dueDate.setDate(dueDate.getDate() + dueInDays);
 
@@ -249,9 +239,6 @@ async function updateInvoice(id, data, actorId) {
   return mapInvoice(invoice);
 }
 
-// Records a payment against an invoice's balance — writes a Payment ledger
-// row (shared with Sales' payment ledger) and bumps amountPaid. Rejects a
-// payment that would overpay the invoice.
 async function recordPayment(id, { amount, method, referenceCode }, actorId) {
   return prisma.$transaction(async (tx) => {
     const invoice = await tx.invoice.findUnique({ where: { id } });
@@ -311,9 +298,6 @@ async function voidInvoice(id, actorId) {
   return mapInvoice(invoice);
 }
 
-// Hard delete only allowed while nothing has been paid yet — otherwise use
-// voidInvoice, which keeps the record for the payment history it already
-// carries.
 async function deleteInvoice(id, actorId) {
   const existing = await prisma.invoice.findUnique({ where: { id } });
   if (!existing) throw ApiError.notFound("Invoice not found.");

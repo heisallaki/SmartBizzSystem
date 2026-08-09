@@ -3,6 +3,7 @@ const ApiError = require("../utils/ApiError");
 const { logAudit } = require("./audit.service");
 const productService = require("./product.service");
 const supplierService = require("./supplier.service");
+const { getBusinessToday } = require("../utils/businessTime");
 
 const FULL_INCLUDE = {
   items: { include: { product: { select: { name: true, sku: true } } } },
@@ -118,7 +119,7 @@ async function createPurchaseOrder(data, actorId) {
         poNumber,
         supplierId: data.supplierId,
         status: "Draft",
-        orderDate: new Date(),
+        orderDate: getBusinessToday(),
         expectedDate: data.expectedDate ? new Date(data.expectedDate) : undefined,
         subtotal,
         taxTotal: 0,
@@ -299,7 +300,7 @@ async function receivePurchaseOrder(id, receivedItems, actorId) {
       where: { id },
       data: {
         status: newStatus,
-        ...(allReceived && { receivedDate: new Date() }),
+        ...(allReceived && { receivedDate: getBusinessToday() }),
       },
       include: FULL_INCLUDE,
     });

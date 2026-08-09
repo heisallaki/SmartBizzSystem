@@ -4,6 +4,7 @@ const { logAudit } = require("./audit.service");
 const productService = require("./product.service");
 const customerService = require("./customer.service");
 const notificationService = require("./notification.service");
+const { getBusinessToday } = require("../utils/businessTime");
 
 const PAYMENT_METHOD_TO_ENUM = {
   Cash: "Cash",
@@ -173,7 +174,7 @@ async function createSale(data, actorId) {
         invoiceNumber,
         customerId,
         cashierId: actorId,
-        saleDate: new Date(),
+        saleDate: getBusinessToday(),        
         subtotal,
         discountTotal: totalDiscount,
         taxRate: data.taxRate,
