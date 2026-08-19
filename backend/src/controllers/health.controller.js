@@ -1,7 +1,3 @@
-// Two-tier health check:
-//   GET /api/v1/health       -> is the API process up at all
-//   GET /api/v1/health/db    -> is the API process AND the Neon connection up
-
 const prisma = require("../config/prisma");
 const asyncHandler = require("../middleware/asyncHandler");
 const ApiResponse = require("../utils/ApiResponse");

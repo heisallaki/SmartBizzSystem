@@ -97,9 +97,6 @@ export default function ProductDialog({
         price: Number(form.price),
       });
 
-      // Only reached on success — a thrown error (already surfaced via
-      // snackbar inside useInventory.js) leaves the dialog open with the
-      // form intact instead of silently closing over a real failure.
       setForm(EMPTY_PRODUCT);
       setErrors({});
       onClose();

@@ -27,8 +27,6 @@ export default function useReports() {
   const [bestSellingProducts, setBestSellingProducts] = useState([]);
   const [lowStockProducts, setLowStockProducts] = useState([]);
 
-  // Avoid firing a fetch with a half-picked custom range — keeps whatever
-  // was last loaded on screen until both dates are set.
   const isCustomRangeReady =
     dateFilter !== "custom" ||
     Boolean(customRange.startDate && customRange.endDate);

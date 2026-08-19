@@ -73,10 +73,6 @@ export default function UsersPage() {
     closeSnackbar,
   } = useUsers();
 
-  // UserDialog awaits this and only closes itself on success — a thrown
-  // error (already surfaced via snackbar inside addUser/updateUser) leaves
-  // the dialog open so the admin can correct it, rather than closing over
-  // a real server rejection like "last active Admin" or a duplicate email.
   const handleSaveUser = (user) => (dialogMode === "edit" ? updateUser(user) : addUser(user));
 
   const isSelf = dialogMode === "edit" && selectedUser?.id === currentUser?.id;

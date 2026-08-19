@@ -8,8 +8,6 @@ function extractErrorMessage(error, fallback) {
   return error.response.data?.message || fallback;
 }
 
-// Returns { user, token }. Callers are responsible for persisting both
-// (see AuthProvider.login) — this function only talks to the API.
 export async function login(email, password) {
   try {
     const { data } = await api.post(API.LOGIN, { email, password });
@@ -22,10 +20,6 @@ export async function login(email, password) {
   }
 }
 
-// Best-effort — server-side this only records an audit-log entry (the JWT
-// itself isn't revocable yet). The caller clears local session state
-// regardless of whether this succeeds, so a network hiccup here should
-// never block someone from logging out.
 export async function logout() {
   try {
     await api.post(API.LOGOUT);

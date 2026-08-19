@@ -1,6 +1,6 @@
 # SmartBizzSystem
 
-A point-of-sale and business management platform built for small and medium-sized businesses in Kenya. It brings sales, inventory, customers, suppliers, purchasing, invoicing, expenses, and reporting into one system, with support for KES, M-Pesa, and Kenyan business requirements.
+A point-of-sale and business management platform built for small and medium-sized businesses. It brings sales, inventory, customers, suppliers, purchasing, invoicing, expenses, and reporting into one system, with support for KES, M-Pesa, and Kenyan business requirements.
 
 ## Features
 

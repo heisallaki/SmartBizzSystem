@@ -1,7 +1,5 @@
 import api from "../../../config/api";
 
-// Products at or below this stock level are flagged "Low Stock" — kept as
-// a named export in case anything else imports it directly.
 export const LOW_STOCK_THRESHOLD = 10;
 
 const STATUS_MAP: Record<string, string> = {
@@ -16,12 +14,8 @@ function mapProduct(product: any) {
   return {
     ...product,
     status: STATUS_MAP[product.status] ?? product.status,
-    // Prisma Decimal fields serialize as strings over JSON.
     price: Number(product.price),
     costPrice: Number(product.costPrice),
-    // Flattened to a plain string for the existing category filter
-    // (`new Set(products.map(p => p.category))`). categoryId kept
-    // alongside in case anything needs the real FK directly.
     category: product.category?.name ?? null,
     categoryId: product.category?.id ?? product.categoryId ?? null,
     supplier: product.supplier?.name ?? null,

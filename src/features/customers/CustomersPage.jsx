@@ -105,7 +105,7 @@ export default function CustomersPage() {
         error.message || "Failed to create customer.",
         "error"
       );
-      throw error; // lets AddCustomerDialog know the save failed, so it keeps the typed-in fields
+      throw error;
     }
   };
 

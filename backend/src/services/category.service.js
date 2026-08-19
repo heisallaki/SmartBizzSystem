@@ -67,10 +67,7 @@ async function updateCategory(id, data, actorId) {
 
 async function deleteCategory(id, actorId) {
   await getCategoryById(id);
-
-  // Hard delete — Category has no deletedAt column. Any products pointing
-  // at this category get categoryId set to NULL automatically (onDelete:
-  // SetNull in schema.prisma), they don't get deleted with it.
+  
   await prisma.category.delete({ where: { id } });
 
   await logAudit({

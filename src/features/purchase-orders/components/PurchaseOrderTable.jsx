@@ -1,4 +1,3 @@
-// src/features/purchase-orders/components/PurchaseOrderTable.jsx
 import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 
 import DataTable from "../../../components/common/DataTable";

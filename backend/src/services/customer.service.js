@@ -174,8 +174,6 @@ async function recordPurchaseForSale({ customerId, saleTotal, saleDate, tx }) {
   });
 }
 
-// Reverses recordPurchaseForSale — called when a sale is voided, deleted,
-// or edited.
 async function reversePurchaseForSale({ customerId, saleTotal, tx }) {
   const db = tx || prisma;
 

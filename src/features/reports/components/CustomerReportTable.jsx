@@ -1,5 +1,3 @@
-// src/features/reports/components/CustomerReportTable.jsx
-
 import PropTypes from "prop-types";
 
 import ReportTable from "./ReportTable";

@@ -1,7 +1,5 @@
 import api from "../../../config/api";
 
-// Backend returns the Prisma enum key (no spaces); the dialog/hook were
-// built against the old mock's space-containing strings ("On Hold").
 const STATUS_MAP: Record<string, string> = {
   Active: "Active",
   OnHold: "On Hold",
@@ -19,8 +17,6 @@ function mapSupplier(supplier: any) {
   return {
     ...supplier,
     status: STATUS_MAP[supplier.status] ?? supplier.status,
-    // Prisma Decimal fields serialize as strings over JSON — useSuppliers.js
-    // does real arithmetic on this (sum, sort), so it needs to be a number.
     totalSpend: Number(supplier.totalSpend),
   };
 }

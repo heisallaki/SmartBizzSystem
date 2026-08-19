@@ -7,8 +7,7 @@ const ApiError = require("../utils/ApiError");
 const { logAudit } = require("./audit.service");
 
 function generateTempPassword() {
-  // 12 random bytes -> base64url, trimmed to 16 chars — readable enough to
-  // type or read aloud, random enough to be a safe one-time credential.
+
   return crypto.randomBytes(12).toString("base64url").slice(0, 16);
 }
 
@@ -23,12 +22,9 @@ async function assertRoleExists(roleId) {
   if (!role) throw ApiError.badRequest("Selected role does not exist.");
 }
 
-// Blocks an action that would leave zero Active Admins — e.g. demoting,
-// suspending, or deleting the last one.
 async function assertNotLastActiveAdmin(existingUser, { newRoleId, newStatus }) {
   const adminRole = await prisma.role.findUnique({ where: { name: "Admin" } });
-  if (!adminRole || existingUser.roleId !== adminRole.id) return; // wasn't an Admin to begin with
-
+  if (!adminRole || existingUser.roleId !== adminRole.id) return;
   const wouldLeaveAdminRole = newRoleId !== undefined && newRoleId !== adminRole.id;
   const wouldBecomeInactive = newStatus !== undefined && newStatus !== "Active";
   if (!wouldLeaveAdminRole && !wouldBecomeInactive) return;
@@ -112,8 +108,6 @@ async function createUser(data, actorId) {
     metadata: { createdEmail: user.email, roleId: data.roleId },
   });
 
-  // temporaryPassword only ever appears in this one response — it can't be
-  // retrieved again, so the frontend needs to surface it immediately.
   return {
     user: toSafeUser(user),
     temporaryPassword: data.password ? undefined : plainPassword,

@@ -88,7 +88,7 @@ export default function useSuppliers() {
       );
     } catch (error) {
       showSnackbar(error.message, "error");
-      throw error; // lets SupplierDialog know the save failed, so it stays open
+      throw error;
     }
   };
 
@@ -96,9 +96,6 @@ export default function useSuppliers() {
     updatedSupplier
   ) => {
     try {
-      // Uses the server's response, not the raw form data — it reflects
-      // the authoritative saved values rather than echoing back whatever
-      // was locally typed.
       const saved =
         await suppliersService.updateSupplier(
           updatedSupplier

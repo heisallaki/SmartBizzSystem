@@ -1,5 +1,3 @@
-// src/features/reports/components/ProfitLossCard.jsx
-
 import PropTypes from "prop-types";
 
 import {

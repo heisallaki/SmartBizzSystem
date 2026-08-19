@@ -62,11 +62,6 @@ CREATE TABLE system_settings (
 
   CONSTRAINT fk_system_settings_user FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
--- Key-value on purpose: this backs Settings > Appearance/Notifications/Backup/
--- System — theme mode, density, primary color, notification toggles, backup
--- schedule. That's a lot of small, frequently-changing, loosely-related
--- toggles; rigid columns here would mean a migration every time the
--- Settings UI grows one.
 
 CREATE TABLE audit_logs (
   id            BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

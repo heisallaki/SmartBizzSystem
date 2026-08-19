@@ -13,9 +13,6 @@ function AuthProvider({ children }) {
     storedUser ? JSON.parse(storedUser) : null
   );
 
-  // Starts true and only resolves once we've confirmed the stored token
-  // (if any) is still valid — ProtectedRoute already gates on this, it
-  // just never had a real async check to wait for before now.
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,7 +29,6 @@ function AuthProvider({ children }) {
         setUser(freshUser);
       })
       .catch(() => {
-        // Token expired, revoked, or the account no longer exists.
         localStorage.removeItem(STORAGE_KEYS.TOKEN);
         localStorage.removeItem(STORAGE_KEYS.USER);
         setUser(null);
@@ -50,7 +46,7 @@ function AuthProvider({ children }) {
     localStorage.removeItem(STORAGE_KEYS.TOKEN);
     localStorage.removeItem(STORAGE_KEYS.USER);
     setUser(null);
-    logoutRequest(); // fire-and-forget audit ping, doesn't block the UI
+    logoutRequest();
   };
 
   return (

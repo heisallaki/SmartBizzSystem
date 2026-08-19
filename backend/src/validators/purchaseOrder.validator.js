@@ -24,10 +24,7 @@ const createPurchaseOrderSchema = z.object({
   notes: z.string().trim().max(2000).optional(),
 });
 
-// Only supplier/items/expectedDate/notes are editable, and only while the
-// PO is still Draft or Submitted (enforced in the service, not here) — a
-// PO's status moves via the dedicated /status and /receive endpoints
-// instead of a generic PATCH, since each transition has its own rules.
+
 const updatePurchaseOrderSchema = createPurchaseOrderSchema.partial();
 
 const updateStatusSchema = z.object({

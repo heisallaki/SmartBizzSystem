@@ -76,8 +76,6 @@ export default function useEditSale({ sale, onSaleUpdated } = {}) {
             sku: item.sku,
             name: item.name,
             price: item.price,
-            // This sale already consumed item.quantity of stock if it
-            // was Completed — give that headroom back for editing.
             stock: wasCompleted
               ? liveStock + item.quantity
               : liveStock,

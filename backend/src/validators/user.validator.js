@@ -18,7 +18,6 @@ const createUserSchema = z.object({
   status: z.enum(["Active", "Suspended", "Invited"]).default("Active"),
 });
 
-// No `password` field here on purpose — see resetPasswordSchema below.
 const updateUserSchema = z.object({
   fullName: z.string().trim().min(1).max(150).optional(),
   email: z.string().trim().toLowerCase().email().optional(),

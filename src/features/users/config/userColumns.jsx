@@ -12,9 +12,6 @@ const STATUS_COLOR = {
   Suspended: "error",
 };
 
-// currentUserId disables Reset Password / Deactivate on your own row —
-// those actions need a different Admin, enforced server-side too, but
-// disabling here avoids a round-trip just to show an error.
 const userColumns = (onEdit, onResetPassword, onDeactivate, currentUserId) => [
   {
     field: "fullName",

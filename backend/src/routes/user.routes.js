@@ -19,9 +19,7 @@ const {
 const router = Router();
 
 router.use(requireAuth);
-router.use(requireRole("Admin")); // whole resource is Admin-only today —
-// change this one line to requireRole("Admin", "Manager") if Managers
-// should get read access later; the individual routes below don't need to change.
+router.use(requireRole("Admin"));
 
 router.get("/", validate(listUsersQuerySchema, "query"), getUsers);
 router.get("/:id", getUser);

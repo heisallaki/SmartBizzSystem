@@ -23,8 +23,6 @@ export default function DeleteCustomerDialog({
     try {
       await onDelete(customer.id);
     } catch {
-      // already surfaced via snackbar in CustomersPage — dialog stays open,
-      // matching the "confirm again once the real problem is fixed" flow
     }
   };
 

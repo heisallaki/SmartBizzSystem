@@ -90,8 +90,6 @@ export default function EditCustomerDialog({
         formData
       );
     } catch {
-      // already surfaced via snackbar in CustomersPage — dialog stays open
-      // with the edited fields intact so they can be corrected and resaved
     }
   };
 

@@ -21,7 +21,6 @@ async function shutdown(signal) {
     process.exit(0);
   });
 
-  // Force-exit if something hangs longer than 10s
   setTimeout(() => process.exit(1), 10_000).unref();
 }
 

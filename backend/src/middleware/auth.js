@@ -1,6 +1,3 @@
-// this file just needs to exist so every other module can protect its
-// routes with `requireAuth` from day one.
-
 const jwt = require("jsonwebtoken");
 const env = require("../config/env");
 const prisma = require("../config/prisma");
@@ -15,7 +12,7 @@ const requireAuth = asyncHandler(async (req, res, next) => {
     throw ApiError.unauthorized("Missing or malformed authorization header.");
   }
 
-  const payload = jwt.verify(token, env.jwt.secret); // throws JsonWebTokenError / TokenExpiredError -> handled by errorHandler
+  const payload = jwt.verify(token, env.jwt.secret);
 
   const user = await prisma.user.findUnique({
     where: { id: payload.sub },
@@ -39,7 +36,6 @@ const requireAuth = asyncHandler(async (req, res, next) => {
   next();
 });
 
-// Usage: router.delete("/:id", requireAuth, requireRole("Admin", "Manager"), controller)
 function requireRole(...allowedRoles) {
   return (req, res, next) => {
     if (!req.user) {

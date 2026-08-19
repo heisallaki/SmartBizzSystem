@@ -24,9 +24,6 @@ export default function useUsers() {
 
   const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
   const [userToResetPassword, setUserToResetPassword] = useState(null);
-
-  // Set after creating a user (if no password was typed in) or resetting
-  // one — surfaced once via TemporaryPasswordDialog, then discarded.
   const [tempPasswordInfo, setTempPasswordInfo] = useState(null);
 
   const [snackbar, setSnackbar] = useState({
@@ -82,7 +79,7 @@ export default function useUsers() {
       }
     } catch (error) {
       showSnackbar(error.message, "error");
-      throw error; // let the dialog know the save failed, so it stays open
+      throw error;
     }
   };
 

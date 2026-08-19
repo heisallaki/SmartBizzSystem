@@ -14,10 +14,6 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// A 401 means the token is missing/expired/invalid — there's no recovering
-// from that except sending the person back to the login page. This runs
-// outside the React tree (axios doesn't know about AuthContext), so it
-// clears storage directly and hard-navigates instead of calling logout().
 api.interceptors.response.use(
   (response) => response,
   (error) => {

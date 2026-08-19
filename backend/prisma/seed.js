@@ -47,7 +47,7 @@ async function main() {
 
   const admin = await prisma.user.upsert({
     where: { email: adminEmail },
-    update: {}, // never overwrite an existing admin's password on re-seed
+    update: {},
     create: {
       roleId: adminRole.id,
       fullName: "Administrator",

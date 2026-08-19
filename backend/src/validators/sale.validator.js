@@ -16,14 +16,9 @@ const saleItemSchema = z.object({
   discount: z.coerce.number().nonnegative().default(0),
 });
 
-// One schema for both create and update — the frontend always submits the
-// sale's full intended state on an edit (see useEditSale.js's saveChanges),
-// never a partial patch, so there's no separate "partial" variant needed.
 const saleSchema = z.object({
-  // "walk-in" or a real customer's customerCode (e.g. "CUS-1001")
   customerId: z.string().trim().default("walk-in"),
   items: z.array(saleItemSchema).min(1, "At least one item is required."),
-  // Order-level discount, on top of any per-line discounts in `items`.
   discount: z.coerce.number().nonnegative().default(0),
   taxRate: z.coerce.number().nonnegative().default(16),
   paymentMethod: z.enum(["Cash", "M-Pesa", "Card", "Bank Transfer"]),

@@ -23,7 +23,6 @@ const createProductSchema = z.object({
   isActive: z.coerce.boolean().default(true),
 });
 
-// stock is intentionally excluded — see product.service.js adjustStock().
 const updateProductSchema = createProductSchema.partial().omit({ stock: true });
 
 const adjustStockSchema = z.object({
@@ -35,10 +34,6 @@ const adjustStockSchema = z.object({
   notes: z.string().trim().max(255).optional(),
 });
 
-// Bridge for the frontend's decrementStock()/incrementStock() batch calls —
-// deliberately restricted to sale-lifecycle movement types only (never
-// "Adjustment"), which is what lets this route stay open to any
-// authenticated role instead of Admin/Manager-only.
 const batchAdjustStockSchema = z.object({
   items: z
     .array(

@@ -7,9 +7,6 @@ function extractErrorMessage(error, fallback) {
   return error.response.data?.message || fallback;
 }
 
-// Backend nests role as { id, name }. Flattened to roleId alongside the
-// object so UserDialog's Select can bind to a plain value while the table
-// still has row.role.name to display directly.
 function mapUser(user) {
   if (!user) return user;
   return {
@@ -29,9 +26,6 @@ const userService = {
     return data.data;
   },
 
-  // Returns { user, temporaryPassword }. temporaryPassword is only ever
-  // present in this one response — the caller must surface it immediately,
-  // it can't be retrieved again afterward.
   async createUser(user) {
     try {
       const { data } = await api.post("/users", user);
@@ -54,8 +48,6 @@ const userService = {
     }
   },
 
-  // Soft-deletes on the backend (suspends + hides from the active list),
-  // not a hard delete — "deactivate" in the UI reflects that accurately.
   async deactivateUser(id) {
     try {
       await api.delete(`/users/${id}`);
@@ -65,8 +57,6 @@ const userService = {
     }
   },
 
-  // Always lets the backend auto-generate the new password — returns
-  // { temporaryPassword } once, same one-time-reveal contract as create.
   async resetPassword(id) {
     try {
       const { data } = await api.post(`/users/${id}/reset-password`, {});

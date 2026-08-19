@@ -67,7 +67,7 @@ export function exportReportToPdf({
     },
 
     headStyles: {
-      fillColor: [15, 118, 110], // SmartBizz teal
+      fillColor: [15, 118, 110],
       textColor: 255,
       fontStyle: "bold",
     },

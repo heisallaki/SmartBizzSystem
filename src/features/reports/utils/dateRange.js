@@ -9,13 +9,6 @@ const addDays = (date, amount) => {
   return next;
 };
 
-/**
- * Resolves a REPORT_DATE_FILTERS value (+ optional custom range) into
- * concrete { startDate, endDate } bounds, both "YYYY-MM-DD" strings.
- * All calendar math runs in local time via Date getters/constructors —
- * never via Date parsing/toISOString — so this is safe regardless of the
- * browser's timezone offset.
- */
 export function resolveDateRange(dateFilter, customRange) {
   const now = new Date();
   const todayKey = toDateKey(now);
@@ -108,11 +101,6 @@ const MONTH_YEAR_LABEL = new Intl.DateTimeFormat("en-KE", {
   timeZone: "UTC",
 });
 
-/**
- * Builds the ordered sequence of buckets spanning a range (including
- * empty ones), so trend charts show continuous periods rather than
- * skipping gaps with no sales.
- */
 export function buildBuckets(range, granularity) {
   const [sy, sm, sd] = range.startDate.split("-").map(Number);
   const [ey, em, ed] = range.endDate.split("-").map(Number);

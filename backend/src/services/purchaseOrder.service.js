@@ -317,9 +317,6 @@ async function receivePurchaseOrder(id, receivedItems, actorId) {
   });
 }
 
-// Hard delete only while still Draft (nothing sent to the supplier, no
-// stock or supplier-total effects to unwind beyond the order-placed
-// count) — anything further along uses updateStatus("Cancelled") instead.
 async function deletePurchaseOrder(id, actorId) {
   return prisma.$transaction(async (tx) => {
     const existing = await tx.purchaseOrder.findUnique({ where: { id } });

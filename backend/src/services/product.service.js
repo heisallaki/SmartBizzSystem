@@ -300,10 +300,6 @@ async function reverseStockForSale({ productId, quantity, saleId, actorId, tx })
   return newStock;
 }
 
-// Called directly by Purchase Orders' receive flow — not its own HTTP
-// endpoint. Increases stock as goods physically arrive, accepting an
-// optional transaction client so it runs atomically alongside updating the
-// PurchaseOrderItem's quantityReceived.
 async function increaseStockForPurchaseOrder({ productId, quantity, purchaseOrderId, actorId, tx }) {
   const db = tx || prisma;
 

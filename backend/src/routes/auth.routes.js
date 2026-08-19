@@ -13,10 +13,6 @@ const { loginSchema, changePasswordSchema } = require("../validators/auth.valida
 
 const router = Router();
 
-// 10 attempts per 15 minutes per IP — generous enough for a real user who
-// mistypes a password a couple of times, tight enough to blunt brute-force
-// guessing. Needs `app.set("trust proxy", ...)` in app.js to read the real
-// client IP correctly behind Render's proxy.
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 10,

@@ -1,6 +1,3 @@
-// All the actual auth business logic lives here — controllers just call
-// into this and translate the result into an HTTP response.
-
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -33,8 +30,6 @@ async function login({ email, password, ipAddress }) {
     include: { role: true },
   });
 
-  // Same generic message whether the email doesn't exist or the password
-  // is wrong — don't give a guesser a way to enumerate valid accounts.
   if (!user || user.deletedAt) {
     throw ApiError.unauthorized("Invalid email or password.");
   }
@@ -44,9 +39,6 @@ async function login({ email, password, ipAddress }) {
     throw ApiError.unauthorized("Invalid email or password.");
   }
 
-  // Status checks happen *after* password verification — at this point
-  // the caller has already proven they know the correct password, so a
-  // more specific message here doesn't leak anything to an outside guesser.
   if (user.status === "Suspended") {
     throw ApiError.forbidden(
       "This account has been suspended. Contact your administrator."
@@ -113,10 +105,7 @@ async function changePassword({ userId, currentPassword, newPassword, ipAddress 
 }
 
 async function logout({ userId, ipAddress }) {
-  // Stateless JWT — there's no server-side session to tear down. This is
-  // purely for the audit trail. If token revocation becomes necessary
-  // later (e.g. "log out of all devices"), this is the place to write a
-  // token/jti to a denylist.
+
   if (userId) {
     await logAudit({
       userId,

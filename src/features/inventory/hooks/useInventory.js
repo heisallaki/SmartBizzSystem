@@ -88,7 +88,7 @@ export default function useInventory() {
       );
     } catch (error) {
       showSnackbar(error.message, "error");
-      throw error; // lets ProductDialog know the save failed, so it stays open
+      throw error;
     }
   };
 

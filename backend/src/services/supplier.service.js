@@ -79,9 +79,6 @@ async function deleteSupplier(id, actorId) {
   });
 }
 
-// Called by Purchase Orders when a new PO is created — "totalOrders" counts
-// orders actually placed with the supplier, regardless of whether they're
-// ever fully received.
 async function recordOrderPlaced({ supplierId, tx }) {
   const db = tx || prisma;
   await db.supplier.update({
@@ -90,8 +87,6 @@ async function recordOrderPlaced({ supplierId, tx }) {
   });
 }
 
-// Reverses recordOrderPlaced — called if a Draft/Submitted/Approved PO is
-// cancelled before anything was received.
 async function reverseOrderPlaced({ supplierId, tx }) {
   const db = tx || prisma;
   const supplier = await db.supplier.findUnique({ where: { id: supplierId } });
@@ -103,10 +98,6 @@ async function reverseOrderPlaced({ supplierId, tx }) {
   });
 }
 
-// Called by Purchase Orders every time goods are actually received —
-// "totalSpend" accumulates the real received value incrementally, across
-// however many partial receipts a PO takes, rather than waiting for it to
-// be marked fully Received.
 async function recordReceivedValue({ supplierId, amount, tx }) {
   const db = tx || prisma;
   await db.supplier.update({

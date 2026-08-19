@@ -7,10 +7,6 @@ function extractErrorMessage(error, fallback) {
   return error.response.data?.message || fallback;
 }
 
-// Backend's public identifier for a customer is its customerCode (e.g.
-// "CUS-1001") — the numeric database id is an internal detail this bridge
-// never surfaces, matching how every other file in this feature already
-// treats `customer.id` as that human-readable code.
 function mapCustomer(customer) {
   if (!customer) return customer;
 
@@ -35,9 +31,6 @@ function mapCustomer(customer) {
     createdAt: customer.createdAt,
     updatedAt: customer.updatedAt,
     totalOrders: customer.totalOrders,
-    // Prisma Decimal fields serialize as strings over JSON — CustomerStats/
-    // CustomerDetailsDrawer format these as currency and do arithmetic on
-    // them, so they need to be real numbers.
     totalSpent: Number(customer.totalSpent),
     outstandingBalance: Number(customer.outstandingBalance),
     lastPurchase: customer.lastPurchaseAt || null,
@@ -50,9 +43,6 @@ function mapCustomer(customer) {
   };
 }
 
-// Reverses mapCustomer — flattens the nested address back into the
-// backend's flat columns, and drops fields the backend doesn't accept on
-// write (totalOrders/totalSpent/outstandingBalance are system-managed).
 function toApiPayload(customer) {
   return {
     firstName: customer.firstName,

@@ -112,14 +112,10 @@ export default function UserDialog({
     setSaving(true);
     try {
       await onSave(payload);
-      // Only reached on success — a thrown error (shown via snackbar by the
-      // hook) leaves the dialog open with the form intact so it can be
-      // corrected, rather than silently closing on a real server rejection.
       setForm(EMPTY_USER);
       setErrors({});
       onClose();
     } catch {
-      // already surfaced via snackbar — nothing further to do here
     } finally {
       setSaving(false);
     }
